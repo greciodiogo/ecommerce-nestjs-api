@@ -8,9 +8,8 @@ import { SettingUpdateDto } from './dto/setting-update.dto';
 import { BUILTIN_SETTINGS } from './builtin-settings.data';
 import { SettingType } from './models/setting-type.enum';
 import { TypeCheckError } from '../errors/type-check.error';
-import validator from 'validator';
-import isISO4217 = validator.isISO4217;
-import isISO31661Alpha2 = validator.isISO31661Alpha2;
+import isISO4217 from 'validator/lib/isISO4217';
+import isISO31661Alpha2 from 'validator/lib/isISO31661Alpha2';
 import { isBooleanString, isNumberString, isString } from 'class-validator';
 import { ConflictError } from '../errors/conflict.error';
 
