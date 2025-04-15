@@ -14,6 +14,7 @@ export default () => ({
   redis: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
   },
   uploadPath: process.env.UPLOAD_PATH,
   nodeEnv: process.env.NODE_ENV,

@@ -10,6 +10,7 @@ export const schema = Joi.object({
   SESSION_SECRET: Joi.string().default('secret'),
   REDIS_HOST: Joi.string().default('redis'),
   REDIS_PORT: Joi.number().default(6379),
+  REDIS_PASSWORD: Joi.string().default('redis'),
   UPLOAD_PATH: Joi.string().default('./uploads'),
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
