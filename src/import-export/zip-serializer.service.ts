@@ -6,7 +6,7 @@ import * as os from 'os';
 import { Collection } from './models/collection.type';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import * as csvtojson from 'csvtojson';
+import csvtojson from 'csvtojson';
 import * as json2csv from 'json2csv';
 
 @Injectable()
