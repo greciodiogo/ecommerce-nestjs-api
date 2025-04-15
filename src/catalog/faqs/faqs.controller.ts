@@ -34,7 +34,7 @@ export class FaqsController {
   @Get()
   @ApiOkResponse({ type: [Faq], description: 'List of all Faqs' })
   getFaqs(@ReqUser() user?: User): Promise<Faq[]> {
-    if (user && [Role.Admin, Role.Manager, Role.Sales, Role.Shoper].includes(user?.role)) {
+    if (user && [Role.Admin, Role.Manager, Role.Sales].includes(user?.role)) {
       return this.faqsService.getFaqs(true);
     }
     return this.faqsService.getFaqs();
