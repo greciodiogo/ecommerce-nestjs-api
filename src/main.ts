@@ -7,10 +7,20 @@ import { RedocModule } from 'nestjs-redoc';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const nodeEnv = configService.get('nodeEnv');
 
-  if (configService.get('nodeEnv') === 'development') {
-    app.enableCors({ origin: true, credentials: true });
+  if (nodeEnv === 'development') {
+    app.enableCors({
+      origin: true,
+      credentials: true,
+    });
+  } else {
+    app.enableCors({
+      origin: ['https://admin.encontrarshopping.com', 'https://encontrarshopping.com'],
+      credentials: true,
+    });
   }
+  
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('E-commerce platform API')
@@ -23,5 +33,7 @@ async function bootstrap() {
 
   const port = configService.get('port');
   await app.listen(port);
+
+  console.log(`App running on port ${port}`);
 }
 bootstrap();
