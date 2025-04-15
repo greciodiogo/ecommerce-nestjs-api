@@ -10,9 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import * as session from 'express-session';
-import * as passport from 'passport';
-import * as createRedisStore from 'connect-redis';
+import passport from 'passport';
+import createRedisStore from 'connect-redis';
 import { RedisClient } from 'redis';
 import { RedisModule, REDIS_CLIENT } from './redis';
 import { RolesGuard } from './auth/guards/roles.guard';
@@ -96,6 +95,7 @@ export class AppModule {
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
+    const session = require('express-session');
     const RedisStore = createRedisStore(session);
     consumer
       .apply(

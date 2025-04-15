@@ -11,11 +11,24 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
+    "skipDefaultLibCheck": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "alwaysStrict": false,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "paths": {
+      "@nestjs/common": ["./node_modules/@nestjs/common"]
+    },
+    "typeRoots": ["./node_modules/@types", "./@types"]
+  },
+  "types": ["node"]
 }

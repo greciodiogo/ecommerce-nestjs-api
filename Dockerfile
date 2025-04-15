@@ -16,7 +16,7 @@ COPY . .
 
 FROM base as prod
 
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 COPY . .
 
