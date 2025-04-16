@@ -19,11 +19,11 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
@@ -57,8 +57,8 @@ export class ProductsController {
 
   @Post()
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Product, description: 'Product created' })
   @ApiBadRequestResponse({ description: 'Invalid product data' })
   createProduct(@Body() product: ProductCreateDto): Promise<Product> {
@@ -67,8 +67,8 @@ export class ProductsController {
 
   @Patch('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Product, description: 'Product updated' })
   @ApiBadRequestResponse({ description: 'Invalid product data' })
   @ApiNotFoundResponse({ description: 'Product not found' })
@@ -81,8 +81,8 @@ export class ProductsController {
 
   @Delete('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   @ApiOkResponse({ description: 'Product deleted' })
   async deleteProduct(@Param('id', ParseIntPipe) id: number): Promise<void> {
@@ -91,8 +91,8 @@ export class ProductsController {
 
   @Patch('/:id/attributes')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   @ApiOkResponse({ type: Product, description: 'Product attributes updated' })
   @ApiBody({ type: [AttributeDto] })

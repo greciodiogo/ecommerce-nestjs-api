@@ -17,11 +17,11 @@ import { FaqUpdateDto } from './dto/faq-update.dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
@@ -55,8 +55,8 @@ export class FaqsController {
 
   @Post()
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Faq, description: 'Faq created' })
   @ApiBadRequestResponse({ description: 'Invalid Faq data' })
   createFaq(@Body() Faq: FaqCreateDto): Promise<Faq> {
@@ -65,8 +65,8 @@ export class FaqsController {
 
   @Patch('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Faq, description: 'Faq updated' })
   @ApiBadRequestResponse({ description: 'Invalid Faq data' })
   @ApiNotFoundResponse({ description: 'Faq not found' })
@@ -79,8 +79,8 @@ export class FaqsController {
 
   @Delete('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Faq not found' })
   @ApiOkResponse({ description: 'Faq deleted' })
   async deleteFaq(@Param('id', ParseIntPipe) id: number): Promise<void> {

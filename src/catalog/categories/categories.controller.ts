@@ -19,11 +19,11 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { CategoryGroup } from './models/category-group.entity';
 import { User } from '../../users/models/user.entity';
@@ -58,8 +58,8 @@ export class CategoriesController {
 
   @Post()
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Category, description: 'Category created' })
   @ApiBadRequestResponse({ description: 'Invalid category data' })
   async createCategory(@Body() category: CategoryCreateDto): Promise<Category> {
@@ -68,8 +68,8 @@ export class CategoriesController {
 
   @Patch('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiBadRequestResponse({ description: 'Invalid category data' })
   @ApiOkResponse({ type: Category, description: 'Category updated' })
   @ApiNotFoundResponse({ description: 'Category not found' })
@@ -82,8 +82,8 @@ export class CategoriesController {
 
   @Delete('/:id')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Category, description: 'Category deleted' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   async deleteCategory(@Param('id', ParseIntPipe) id: number): Promise<void> {
@@ -105,8 +105,8 @@ export class CategoriesController {
 
   @Post('/:id/products')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   @ApiCreatedResponse({
     type: Product,
@@ -130,8 +130,8 @@ export class CategoriesController {
 
   @Delete('/:id/products/:productId')
   @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   @ApiOkResponse({ description: 'Product deleted from category' })
   async deleteCategoryProduct(

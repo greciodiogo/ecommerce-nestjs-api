@@ -20,11 +20,11 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('attribute types')
-@ApiUnauthorizedResponse({ description: 'User not logged in' })
+// @ApiUnauthorizedResponse({ description: 'User not logged in' })
 @ApiForbiddenResponse({ description: 'User not authorized' })
 @Controller('attribute-types')
 export class AttributeTypesController {

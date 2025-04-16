@@ -19,11 +19,11 @@ import { User } from '../../users/models/user.entity';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Features } from '../../settings/guards/features.decorator';
 
@@ -48,8 +48,8 @@ export class ProductRatingsController {
   @Post('')
   @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
   @ApiNotFoundResponse({ description: 'Product not found' })
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({
     type: ProductRating,
     description: 'Product rating created',
@@ -69,8 +69,8 @@ export class ProductRatingsController {
 
   @Put(':id')
   @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product rating not found' })
   @ApiOkResponse({ type: ProductRating, description: 'Product rating updated' })
   @ApiBadRequestResponse({ description: 'Invalid rating data' })
@@ -96,8 +96,8 @@ export class ProductRatingsController {
 
   @Delete(':id')
   @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product rating not found' })
   @ApiOkResponse({ description: 'Product rating deleted' })
   async deleteProductRating(
