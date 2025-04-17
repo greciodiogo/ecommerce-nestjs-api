@@ -18,12 +18,12 @@ import {
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiProduces,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { Role } from '../../../users/models/role.enum';
@@ -58,9 +58,9 @@ export class ProductPhotosController {
   }
 
   @Post('photos')
-  @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin, Role.Manager)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   @ApiCreatedResponse({ type: Product, description: 'Product photo added' })
   @ApiBody({ schema: fileBodySchema })
@@ -82,9 +82,9 @@ export class ProductPhotosController {
   }
 
   @Delete('photos/:photoId')
-  @Roles(Role.Admin, Role.Manager)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin, Role.Manager)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   @ApiOkResponse({ type: Product, description: 'Product photo deleted' })
   async deleteProductPhoto(

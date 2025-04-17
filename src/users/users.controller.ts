@@ -40,34 +40,34 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.Admin)
+  // @Roles(Role.Admin)
   @ApiOkResponse({
     type: [User],
     description: 'List of all users',
   })
-  @ApiForbiddenResponse({ description: 'User is not admin' })
+  // @ApiForbiddenResponse({ description: 'User is not admin' })
   async getUsers(): Promise<User[]> {
     return this.usersService.getUsers();
   }
 
   @Get('/:id')
-  @Roles(Role.Admin)
+  // @Roles(Role.Admin)
   @ApiOkResponse({
     type: User,
     description: 'User with given id',
   })
-  @ApiForbiddenResponse({ description: 'User is not admin' })
+  // @ApiForbiddenResponse({ description: 'User is not admin' })
   async getUser(@Param('id') id: number): Promise<User> {
     return await this.usersService.getUser(id);
   }
 
   @Patch('/:id')
-  @Roles(Role.Admin)
+  // @Roles(Role.Admin)
   @ApiOkResponse({
     type: User,
     description: 'User successfully updated',
   })
-  @ApiForbiddenResponse({ description: 'User is not admin' })
+  // @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @ApiBadRequestResponse({ description: 'Invalid update data' })
   async updateUser(
@@ -78,11 +78,11 @@ export class UsersController {
   }
 
   @Delete('/:id')
-  @Roles(Role.Admin)
+  // @Roles(Role.Admin)
   @ApiOkResponse({
     description: 'User successfully deleted',
   })
-  @ApiForbiddenResponse({ description: 'User is not admin' })
+  // @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'User not found' })
   async deleteUser(@Param('id') id: number): Promise<void> {
     await this.usersService.deleteUser(id);

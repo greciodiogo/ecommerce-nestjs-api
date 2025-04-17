@@ -43,18 +43,18 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles(Role.Admin, Role.Manager, Role.Sales)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin, Role.Manager, Role.Sales)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: [Order], description: 'List of all orders' })
   async getOrders(): Promise<Order[]> {
     return this.ordersService.getOrders();
   }
 
   @Get('/my')
-  @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({
     type: [Order],
     description: "List of current user's orders",
@@ -64,10 +64,10 @@ export class OrdersController {
   }
 
   @Get('/:id')
-  @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
+  // @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
   @ApiNotFoundResponse({ description: 'Order not found' })
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Order, description: 'Order with given id' })
   async getOrder(
     @ReqUser() user: User,
@@ -81,11 +81,11 @@ export class OrdersController {
   }
 
   @Patch('/:id')
-  @Roles(Role.Admin, Role.Manager, Role.Sales)
+  // @Roles(Role.Admin, Role.Manager, Role.Sales)
   @ApiBadRequestResponse({ description: 'Invalid order data' })
   @ApiNotFoundResponse({ description: 'Order not found' })
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Order, description: 'Order updated' })
   async updateOrder(
     @Param('id', ParseIntPipe) id: number,
