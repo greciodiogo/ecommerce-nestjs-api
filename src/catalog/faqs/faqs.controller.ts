@@ -54,7 +54,7 @@ export class FaqsController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Faq, description: 'Faq created' })
@@ -64,7 +64,7 @@ export class FaqsController {
   }
 
   @Patch('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Faq, description: 'Faq updated' })
@@ -78,7 +78,7 @@ export class FaqsController {
   }
 
   @Delete('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Faq not found' })

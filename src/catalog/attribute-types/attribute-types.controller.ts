@@ -31,7 +31,7 @@ export class AttributeTypesController {
   constructor(private readonly attributeTypesService: AttributeTypesService) {}
 
   @Get()
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   @ApiOkResponse({
     type: [AttributeType],
     description: 'List of attribute types',
@@ -41,7 +41,7 @@ export class AttributeTypesController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   @ApiCreatedResponse({
     type: AttributeType,
     description: 'Attribute type created',
@@ -54,7 +54,7 @@ export class AttributeTypesController {
   }
 
   @Put('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   @ApiOkResponse({ type: AttributeType, description: 'Attribute type updated' })
   @ApiNotFoundResponse({ description: 'Attribute type not found' })
   @ApiBadRequestResponse({ description: 'Invalid attribute type data' })
@@ -69,7 +69,7 @@ export class AttributeTypesController {
   }
 
   @Delete('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   @ApiOkResponse({ description: 'Attribute type deleted' })
   @ApiNotFoundResponse({ description: 'Attribute type not found' })
   async deleteAttributeType(

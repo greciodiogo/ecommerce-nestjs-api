@@ -56,7 +56,7 @@ export class ProductsController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Product, description: 'Product created' })
@@ -66,7 +66,7 @@ export class ProductsController {
   }
 
   @Patch('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Product, description: 'Product updated' })
@@ -80,7 +80,7 @@ export class ProductsController {
   }
 
   @Delete('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })
@@ -90,7 +90,7 @@ export class ProductsController {
   }
 
   @Patch('/:id/attributes')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Product not found' })

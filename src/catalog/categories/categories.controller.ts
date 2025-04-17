@@ -57,7 +57,7 @@ export class CategoriesController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Category, description: 'Category created' })
@@ -67,7 +67,7 @@ export class CategoriesController {
   }
 
   @Patch('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiBadRequestResponse({ description: 'Invalid category data' })
@@ -81,7 +81,7 @@ export class CategoriesController {
   }
 
   @Delete('/:id')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: Category, description: 'Category deleted' })
@@ -104,7 +104,7 @@ export class CategoriesController {
   }
 
   @Post('/:id/products')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Category not found' })
@@ -129,7 +129,7 @@ export class CategoriesController {
   }
 
   @Delete('/:id/products/:productId')
-  @Roles(Role.Admin, Role.Manager)
+  // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Category not found' })
