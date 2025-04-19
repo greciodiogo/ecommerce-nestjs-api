@@ -106,7 +106,7 @@ export class AppModule {
           saveUninitialized: false,
           cookie: {
             httpOnly: true,
-            secure: false, // true se estiver usando HTTPS
+            secure: true, // true se estiver usando HTTPS
             sameSite: 'none', // ou 'none' se for HTTPS com domínios diferentes
             maxAge: this.configService.get<number>('session.maxAge'),
           },
