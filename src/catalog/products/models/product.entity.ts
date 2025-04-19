@@ -27,7 +27,7 @@ export class Product {
   @Column({ type: 'double precision' })
   price: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', default: 0 })
   service_fee: number;
 
   @Column({ default: true })
