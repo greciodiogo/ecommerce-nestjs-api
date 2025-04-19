@@ -15,11 +15,11 @@ import { Role } from '../../users/models/role.enum';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('delivery methods')
@@ -39,9 +39,9 @@ export class DeliveryMethodsController {
   }
 
   @Post()
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiBadRequestResponse({ description: 'Invalid delivery method data' })
   @ApiCreatedResponse({
     type: DeliveryMethod,
@@ -54,9 +54,9 @@ export class DeliveryMethodsController {
   }
 
   @Put(':id')
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Delivery method not found' })
   @ApiBadRequestResponse({ description: 'Invalid delivery method data' })
   @ApiOkResponse({
@@ -71,9 +71,9 @@ export class DeliveryMethodsController {
   }
 
   @Delete(':id')
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Delivery method not found' })
   @ApiOkResponse({ description: 'Delivery method deleted' })
   async deleteDeliveryMethod(@Param('id') id: number): Promise<void> {

@@ -11,7 +11,7 @@ async function bootstrap() {
 
   if (nodeEnv === 'development') {
     app.enableCors({
-      origin: true,
+      origin: ['localhost'],
       credentials: true,
     });
   } else {

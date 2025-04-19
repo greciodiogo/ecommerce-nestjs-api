@@ -16,11 +16,11 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
+  // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
+  // ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('payment methods')
@@ -38,9 +38,9 @@ export class PaymentMethodsController {
   }
 
   @Post()
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiBadRequestResponse({ description: 'Invalid payment method data' })
   @ApiCreatedResponse({
     type: PaymentMethod,
@@ -53,9 +53,9 @@ export class PaymentMethodsController {
   }
 
   @Put(':id')
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Payment method not found' })
   @ApiBadRequestResponse({ description: 'Invalid payment method data' })
   @ApiOkResponse({ type: PaymentMethod, description: 'Payment method updated' })
@@ -67,9 +67,9 @@ export class PaymentMethodsController {
   }
 
   @Delete(':id')
-  @Roles(Role.Admin)
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
+  // @Roles(Role.Admin)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiNotFoundResponse({ description: 'Payment method not found' })
   @ApiOkResponse({ description: 'Payment method deleted' })
   async deletePaymentMethod(
