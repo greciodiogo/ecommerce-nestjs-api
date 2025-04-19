@@ -9,17 +9,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('nodeEnv');
 
-  if (nodeEnv === 'development') {
     app.enableCors({
       origin: true,
       credentials: true,
     });
-  } else {
-    app.enableCors({
-      origin: ['https://admin.encontrarshopping.com', 'https://encontrarshopping.com'],
-      credentials: true,
-    });
-  }
   
 
   const swaggerConfig = new DocumentBuilder()
