@@ -4,14 +4,16 @@ import { CategoriesModule } from './categories/categories.module';
 import { ProductRatingsModule } from './product-ratings/product-ratings.module';
 import { ProductsModule } from './products/products.module';
 import { FaqsModule } from './faqs/faqs.module';
+import { ShopsModule } from './shops/shops.module';
 
 @Module({
   imports: [
-    AttributeTypesModule,
+  AttributeTypesModule,
     CategoriesModule,
     ProductRatingsModule,
     ProductsModule,
     FaqsModule,
+    ShopsModule
   ],
   exports: [
     AttributeTypesModule,
@@ -19,6 +21,7 @@ import { FaqsModule } from './faqs/faqs.module';
     ProductRatingsModule,
     ProductsModule,
     FaqsModule,
+    ShopsModule
   ],
 })
 export class CatalogModule {}
