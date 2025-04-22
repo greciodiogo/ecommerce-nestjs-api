@@ -6,13 +6,13 @@ import { ShopItem } from './models/shop-item.entity';
 
 @Injectable()
 export class ShopsExporter implements Exporter<Shop> {
-  constructor(private ordersService: ShopsService) {}
+  constructor(private shopsService: ShopsService) {}
 
   async export(): Promise<Shop[]> {
-    const orders = await this.ordersService.getShops(true, true);
+    const shops = await this.shopsService.getShops(true, true);
     const preparedShops: Shop[] = [];
-    for (const order of orders) {
-      preparedShops.push(this.prepareShop(order));
+    for (const shop of shops) {
+      preparedShops.push(this.prepareShop(shop));
     }
     return preparedShops;
   }

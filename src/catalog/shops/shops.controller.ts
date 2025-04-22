@@ -29,31 +29,31 @@ import { ShopsService } from './shops.service';
 @ApiTags('shops')
 @Controller('shops')
 export class ShopsController {
-  constructor(private readonly ordersService: ShopsService) {}
+  constructor(private readonly shopsService: ShopsService) {}
 
   @Post()
   @ApiCreatedResponse({ type: Shop, description: 'Shop created' })
-  @ApiBadRequestResponse({ description: 'Invalid order data' })
+  @ApiBadRequestResponse({ description: 'Invalid shop data' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   async createShop(
     @ReqUser() user: User | null,
     @Body() body: ShopCreateDto,
   ): Promise<Shop> {
-    return await this.ordersService.createShop(body);
+    return await this.shopsService.createShop(body);
   }
 
   @Get()
-  // @Roles(Role.Admin, Role.Manager, Role.Sales)
+  // @Roles(Role.Admin)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
-  @ApiOkResponse({ type: [Shop], description: 'List of all orders' })
+  @ApiOkResponse({ type: [Shop], description: 'List of all shops' })
   async getShops(): Promise<Shop[]> {
-    return this.ordersService.getShops();
+    return this.shopsService.getShops();
   }
 
   @Patch('/:id')
   // @Roles(Role.Admin, Role.Manager, Role.Sales)
-  @ApiBadRequestResponse({ description: 'Invalid order data' })
+  @ApiBadRequestResponse({ description: 'Invalid shop data' })
   @ApiNotFoundResponse({ description: 'Shop not found' })
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
@@ -62,6 +62,6 @@ export class ShopsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: ShopUpdateDto,
   ): Promise<Shop> {
-    return await this.ordersService.updateShop(id, body);
+    return await this.shopsService.updateShop(id, body);
   }
 }
