@@ -8,7 +8,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ShopItemDto } from './shop-item.dto';
-import { Type } from 'class-transformer';
+import { Exclude, Type } from 'class-transformer';
+import { Column, Index } from 'typeorm';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 export class ShopCreateDto {
   @IsNotEmpty({ each: true })
@@ -37,4 +39,11 @@ export class ShopCreateDto {
   @IsOptional()
   address?: string;
 
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }

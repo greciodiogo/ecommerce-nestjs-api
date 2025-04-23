@@ -5,6 +5,7 @@ import { User } from './models/user.entity';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { NotFoundError } from '../errors/not-found.error';
 import { ConflictError } from '../errors/conflict.error';
+import { Role } from './models/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +18,7 @@ export class UsersService {
     hashedPassword: string,
     firstName?: string,
     lastName?: string,
+    role?: Role
   ): Promise<User> {
     try {
       const user = new User();
@@ -24,6 +26,7 @@ export class UsersService {
       user.password = hashedPassword;
       user.firstName = firstName;
       user.lastName = lastName;
+      user.role = role;
       const savedUser = await this.usersRepository.save(user);
       const { password, ...toReturn } = savedUser;
       return toReturn as User;

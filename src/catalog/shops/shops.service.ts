@@ -10,6 +10,8 @@ import { NotFoundError } from '../../errors/not-found.error';
 import { Role } from '../../users/models/role.enum';
 import { ShopItemDto } from './dto/shop-item.dto';
 import { ShopItem } from './models/shop-item.entity'; 
+import * as argon2 from 'argon2';
+
 
 @Injectable()
 export class ShopsService {
@@ -53,7 +55,7 @@ export class ShopsService {
 
   async createShop(
     shopData: ShopCreateDto,
-  ): Promise<Shop> {
+  ): Promise<any> {
     const shop = new Shop();
 
     shop.products = await this.getItems(shop, shopData.products);
@@ -62,7 +64,19 @@ export class ShopsService {
     shop.contactPhone = shopData.contactPhone;
     shop.nif = shopData.nif;
     shop.address = shopData.address;
-    return this.shopsRepository.save(shop);
+    
+    const savedShop = await this.shopsRepository.save(shop);
+
+    const hashedPassword = await argon2.hash(shopData.password);
+    const response = await this.usersService.addUser(
+      shopData.email,
+      hashedPassword,
+      shop.shopName,
+      '',
+      Role.Sales // ou 'sales' dependendo de como defines os enums
+    );
+  
+    return savedShop;
   }
 
   private async getItems(shop: Shop, items: ShopItemDto[]) {
