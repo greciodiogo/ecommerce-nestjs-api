@@ -14,6 +14,7 @@ import { OrderPayment } from './models/order-payment.entity';
 import { NotFoundError } from '../../errors/not-found.error';
 import { Role } from '../../users/models/role.enum';
 import { OrderItemDto } from './dto/order-item.dto';
+import { OrderStatus } from './models/order-status.enum';
 
 @Injectable()
 export class OrdersService {
@@ -28,6 +29,20 @@ export class OrdersService {
 
   async getOrders(withUser = false, withProducts = false): Promise<Order[]> {
     return this.ordersRepository.find({
+      relations: [
+        ...(withUser ? ['user'] : []),
+        'items',
+        ...(withProducts ? ['items.product'] : []),
+        'delivery',
+        'payment',
+        'return',
+      ],
+    });
+  }
+
+  async getSales(withUser = false, withProducts = false): Promise<Order[]> {
+    return this.ordersRepository.find({
+      where: { status: OrderStatus.Confirmed }, // <--- Aqui o filtro
       relations: [
         ...(withUser ? ['user'] : []),
         'items',

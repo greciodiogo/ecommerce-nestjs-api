@@ -42,6 +42,14 @@ export class OrdersController {
     return await this.ordersService.createOrder(user?.id ?? null, body);
   }
 
+  @Get('/sales')
+  // @Roles(Role.Admin, Role.Manager, Role.Sales)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
+  @ApiOkResponse({ type: [Order], description: 'List of all sales' })
+  async getSales(): Promise<Order[]> {
+    return this.ordersService.getSales();
+  }
   @Get()
   // @Roles(Role.Admin, Role.Manager, Role.Sales)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
