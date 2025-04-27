@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './models/product.entity';
@@ -101,5 +103,12 @@ export class ProductsController {
     @Body() attributes: AttributeDto[],
   ): Promise<Product> {
     return await this.productsService.updateProductAttributes(id, attributes);
+  }
+
+  
+  @Get('dashboard/low-stock')
+  async getLowStockProductsCount(@Query('quantity',  new DefaultValuePipe(5), ParseIntPipe) quantity: number,) {
+    const count = await this.productsService.getLowStockProductsCount(quantity);
+    return { totalLowStockProducts: count };
   }
 }

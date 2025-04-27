@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './models/product.entity';
-import { In, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { ProductCreateDto } from './dto/product-create.dto';
 import { ProductUpdateDto } from './dto/product-update.dto';
 import { Attribute } from './models/attribute.entity';
@@ -125,4 +125,14 @@ export class ProductsService {
     product.attributes = await this.attributesRepository.save(attributesToSave);
     return this.productsRepository.save(product);
   }
+
+    async getLowStockProductsCount(quantity): Promise<number> {
+      const lowStockProducts = await this.productsRepository.count({
+        where: {
+          stock: LessThan(quantity), // Usando LessThan ao invés de lt
+        },
+      });
+    
+      return lowStockProducts;
+    }
 }
