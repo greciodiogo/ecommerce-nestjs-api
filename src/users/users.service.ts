@@ -44,14 +44,20 @@ export class UsersService {
   async findUserToLogin(email: string): Promise<User | null> {
     return await this.usersRepository.findOne({
       where: { email },
-      select: { password: true, email: true, id: true, role: true },
+      select: {
+        password: true,
+        firstName: true,
+        email: true,
+        id: true,
+        role: true,
+      },
     });
   }
 
   async findUserToSession(id: number): Promise<User | null> {
     return await this.usersRepository.findOne({
       where: { id },
-      select: { email: true, id: true, role: true },
+      select: { email: true, firstName: true, id: true, role: true },
     });
   }
 

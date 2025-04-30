@@ -42,14 +42,19 @@ export class AuthController {
   @Post('login')
   @ApiBody({ type: LoginDto })
   @ApiCreatedResponse({
-    type: PickType(User, ['id', 'email', 'role']),
+    type: PickType(User, ['id', 'firstName', 'email', 'role']),
     description: 'Logged in user',
   })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   async login(
     @Req() req: Request,
-  ): Promise<Pick<User, 'id' | 'email' | 'role'>> {
-    return req.user as User;
+  ): Promise<Pick<User, 'id' | 'firstName' | 'email' | 'role'>> {
+    return new Promise((resolve, reject) => {
+      req.login(req.user, (err) => {
+        if (err) return reject(err);
+        resolve(req.user as User);
+      });
+    });
   }
 
   @UseGuards(SessionAuthGuard)
