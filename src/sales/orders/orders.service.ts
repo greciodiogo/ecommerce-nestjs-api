@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Order } from './models/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderCreateDto } from './dto/order-create.dto';
@@ -15,6 +15,7 @@ import { NotFoundError } from '../../errors/not-found.error';
 import { Role } from '../../users/models/role.enum';
 import { OrderItemDto } from './dto/order-item.dto';
 import { OrderStatus } from './models/order-status.enum';
+import { User } from 'src/users/models/user.entity';
 
 @Injectable()
 export class OrdersService {
@@ -38,6 +39,49 @@ export class OrdersService {
         'return',
       ],
     });
+  }
+
+  async getDashboardData() {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), 4 );
+    const endOfDay = new Date(today.getFullYear(), today.getMonth());
+    
+    return this.usersService.getNewUsersCount(3);
+    return {
+      confirmedToday: await this.getOrdersConfirmedToday(),
+      // newUsers: await this.usersRepository.getNewUsersCount(3),
+      totalSales: await this.getTotalSales(),
+    };
+  }
+
+  async getOrdersConfirmedToday(): Promise<number> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+  
+    return this.ordersRepository.count({
+      where: {
+        status: OrderStatus.Open,
+        created: Between(startOfDay, endOfDay),
+      },
+    });
+  }
+
+  async getTotalSales(): Promise<number> {
+    const confirmedOrders = await this.ordersRepository.find({
+      where: { status: OrderStatus.Confirmed },
+      relations: ['items'],
+    });
+  
+    let total = 0;
+  
+    for (const order of confirmedOrders) {
+      for (const item of order.items) {
+        total += item.price * item.quantity;
+      }
+    }
+  
+    return total;
   }
 
   async getSales(withUser = false, withProducts = false): Promise<Order[]> {

@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Role } from '../../users/models/role.enum';
 import { OrdersService } from './orders.service';
@@ -57,6 +58,15 @@ export class OrdersController {
   @ApiOkResponse({ type: [Order], description: 'List of all orders' })
   async getOrders(): Promise<Order[]> {
     return this.ordersService.getOrders();
+  }
+
+  @Get('/dashboard')
+  // @Roles(Role.Admin, Role.Manager, Role.Sales)
+  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
+  // @ApiForbiddenResponse({ description: 'User not authorized' })
+  @ApiOkResponse({ type: [Order], description: 'List of all orders' })
+  async getDashboard(): Promise<any> {
+    return this.ordersService.getDashboardData();
   }
 
   @Get('/my')

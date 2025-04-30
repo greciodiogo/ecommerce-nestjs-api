@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { User } from './models/user.entity';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { NotFoundError } from '../errors/not-found.error';
@@ -86,5 +86,17 @@ export class UsersService {
     }
     await this.usersRepository.delete({ id });
     return true;
+  }
+
+  async getNewUsersCount(month: number): Promise<number> {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), month - 1 );
+      const endOfDay = new Date(today.getFullYear(), today.getMonth());
+      
+      return this.usersRepository.count({
+          where: {
+            registered: Between(startOfDay, endOfDay),
+          },
+      });
   }
 }
