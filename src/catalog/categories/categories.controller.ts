@@ -103,6 +103,19 @@ export class CategoriesController {
     return await this.categoriesService.getCategoryProducts(id);
   }
 
+  @Get('/slug/:slug/products')
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiOkResponse({ type: [Product], description: 'Category products by slug' })
+  async getCategoryProductsBySlug(
+    @Param('slug') slug: string,
+    @ReqUser() user?: User,
+  ): Promise<Product[]> {
+    if (user && [Role.Admin, Role.Manager, Role.Sales].includes(user?.role)) {
+      return await this.categoriesService.getCategoryProductsBySlug(slug, true);
+    }
+    return await this.categoriesService.getCategoryProductsBySlug(slug);
+  }
+
   @Post('/:id/products')
   // @Roles(Role.Admin, Role.Manager)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })

@@ -47,6 +47,27 @@ export class CategoriesService {
     return category;
   }
 
+  async getCategoryBySlug(
+    slug: string,
+    children = true,
+    products = false,
+  ): Promise<Category> {
+    const category = await this.categoriesRepository.findOne({
+      where: { slug },
+      relations: [
+        'parentCategory',
+        ...(children ? ['childCategories'] : []),
+        ...(products
+          ? ['products', 'products.attributes', 'products.attributes.type']
+          : []),
+      ],
+    });
+    if (!category) {
+      throw new NotFoundError('category', 'slug', slug);
+    }
+    return category;
+  }
+
   async getCategoryGroups(): Promise<CategoryGroup[]> {
     return await this.categoryGroupsRepository.find({
       relations: ['categories'],
@@ -107,6 +128,17 @@ export class CategoriesService {
     withHidden?: boolean,
   ): Promise<Product[]> {
     const category = await this.getCategory(id, false, true);
+    if (!withHidden) {
+      return category.products.filter((product) => product.visible);
+    }
+    return category.products;
+  }
+
+  async getCategoryProductsBySlug(
+    slug: string,
+    withHidden?: boolean,
+  ): Promise<Product[]> {
+    const category = await this.getCategoryBySlug(slug, false, true);
     if (!withHidden) {
       return category.products.filter((product) => product.visible);
     }
