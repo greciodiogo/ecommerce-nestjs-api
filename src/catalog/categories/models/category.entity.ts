@@ -24,6 +24,9 @@ export class Category {
   @Column({ nullable: true })
   slug?: string;
 
+  @Column({ type: 'double precision', default: 0 })
+  service_fee: number;
+  
   @ManyToOne(() => Category, (category) => category.childCategories, {
     onDelete: 'SET NULL',
     nullable: true,

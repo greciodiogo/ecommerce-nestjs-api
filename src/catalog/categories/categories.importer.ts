@@ -67,6 +67,7 @@ export class CategoriesImporter implements Importer {
       parsedCategory.name = category.name as string;
       parsedCategory.description = category.description as string;
       parsedCategory.slug = category.slug as string;
+      parsedCategory.service_fee = category.service_fee as number;
       parsedCategory.parentCategory = {
         id: category.parentCategoryId as number,
       } as Category;

@@ -22,6 +22,7 @@ export class CategoriesExporter implements Exporter<Category> {
     preparedCategory.name = category.name;
     preparedCategory.description = category.description;
     preparedCategory.slug = category.slug;
+    preparedCategory.service_fee = category.service_fee as number;
     preparedCategory.parentCategoryId = category.parentCategory?.id;
     preparedCategory.groups = category.groups.map(({ name }) => ({ name }));
     preparedCategory.products = category.products.map(({ id }) => ({ id }));

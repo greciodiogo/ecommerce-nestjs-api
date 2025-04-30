@@ -16,10 +16,6 @@ export class ProductCreateDto {
   @Min(0)
   price: number;
 
-  @IsNumber()
-  @Min(0)
-  service_fee: number;
-
   @IsBoolean()
   @IsOptional()
   visible?: boolean;

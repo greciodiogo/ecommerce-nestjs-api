@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CategoryCreateDto {
   @IsString()
@@ -11,6 +11,11 @@ export class CategoryCreateDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  service_fee?: number;
 
   @IsNumber()
   @IsOptional()

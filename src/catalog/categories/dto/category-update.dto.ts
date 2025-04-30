@@ -1,8 +1,10 @@
 import {
   IsNotEmpty,
   IsNotEmptyObject,
+  IsNumber,
   IsOptional,
   IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { CategoryGroupDto } from './category-group.dto';
@@ -21,6 +23,11 @@ export class CategoryUpdateDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  service_fee?: number;
 
   @IsOptional()
   parentCategoryId?: number;
