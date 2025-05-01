@@ -17,6 +17,18 @@ import { OrderItemDto } from './dto/order-item.dto';
 import { OrderStatus } from './models/order-status.enum';
 import { User } from 'src/users/models/user.entity';
 
+const today = new Date();
+const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
+const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+export const startOfWeek = new Date(today);
+startOfWeek.setDate(today.getDate() - diffToMonday);
+startOfWeek.setHours(0, 0, 0, 0);
+
+export const endOfWeek = new Date(startOfWeek);
+endOfWeek.setDate(startOfWeek.getDate() + 6);
+endOfWeek.setHours(23, 59, 59, 999);
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -42,34 +54,41 @@ export class OrdersService {
   }
 
   async getDashboardData() {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), 4 );
-    const endOfDay = new Date(today.getFullYear(), today.getMonth());
-    
-    return this.usersService.getNewUsersCount(3);
     return {
-      confirmedToday: await this.getOrdersConfirmedToday(),
-      // newUsers: await this.usersRepository.getNewUsersCount(3),
+      confirmedToday: await this.getOrderByStatus(false, OrderStatus.Confirmed),
+      confirmedOrderWeek: await this.getOrderByStatus(true, OrderStatus.Confirmed),
+      completedDeliveriesWeek: await this.getOrderByStatus(false, OrderStatus.Delivered),
+      newUsers: await this.usersService.getNewUsersCount(true),
       totalSales: await this.getTotalSales(),
     };
   }
 
-  async getOrdersConfirmedToday(): Promise<number> {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-  
-    return this.ordersRepository.count({
-      where: {
-        status: OrderStatus.Open,
-        created: Between(startOfDay, endOfDay),
-      },
-    });
+  async getOrderByStatus(weekly: boolean = false, orderStatus: OrderStatus): Promise<number> {
+    let where: any = {
+      status: orderStatus,
+    };
+    if (weekly) {
+      where.updated = Between(startOfWeek, endOfWeek);
+    }
+
+    if (orderStatus) {
+      where.status = orderStatus;
+    }
+
+    return this.ordersRepository.count({where});
   }
 
-  async getTotalSales(): Promise<number> {
+  async getTotalSales(weekly: boolean = false): Promise<number> {
+    let where: any = {
+      status: OrderStatus.Confirmed,
+    };
+  
+    if (weekly) {
+      where.updated = Between(startOfWeek, endOfWeek);
+    }
+  
     const confirmedOrders = await this.ordersRepository.find({
-      where: { status: OrderStatus.Confirmed },
+      where,
       relations: ['items'],
     });
   

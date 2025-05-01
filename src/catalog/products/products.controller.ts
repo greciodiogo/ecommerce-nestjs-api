@@ -106,7 +106,7 @@ export class ProductsController {
   }
 
   
-  @Get('dashboard/low-stock')
+  @Get('/dashboard/low-stock')
   async getLowStockProductsCount(@Query('quantity',  new DefaultValuePipe(5), ParseIntPipe) quantity: number,) {
     const count = await this.productsService.getLowStockProductsCount(quantity);
     return { totalLowStockProducts: count };
