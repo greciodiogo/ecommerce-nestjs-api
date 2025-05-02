@@ -26,7 +26,6 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Order } from './models/order.entity';
-import { DashboardState } from './interfaces/dashboard';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -59,15 +58,6 @@ export class OrdersController {
   @ApiOkResponse({ type: [Order], description: 'List of all orders' })
   async getOrders(): Promise<Order[]> {
     return this.ordersService.getOrders();
-  }
-
-  @Get('/dashboard')
-  // @Roles(Role.Admin, Role.Manager, Role.Sales)
-  // @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  // @ApiForbiddenResponse({ description: 'User not authorized' })
-  @ApiOkResponse({ type: [Order], description: 'Dashboard Items' })
-  async getDashboard(): Promise<DashboardState> {
-    return this.ordersService.getDashboardData();
   }
 
   @Get('/my')

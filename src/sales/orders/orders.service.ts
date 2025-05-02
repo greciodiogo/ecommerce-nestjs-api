@@ -53,15 +53,6 @@ export class OrdersService {
     });
   }
 
-  async getDashboardData() {
-    return {
-      confirmedToday: await this.getOrderByStatus(false, OrderStatus.Confirmed),
-      confirmedOrderWeek: await this.getOrderByStatus(true, OrderStatus.Confirmed),
-      completedDeliveriesWeek: await this.getOrderByStatus(false, OrderStatus.Delivered),
-      newUsers: await this.usersService.getNewUsersCount(true),
-      totalSales: await this.getTotalSales(),
-    };
-  }
 
   async getOrderByStatus(weekly: boolean = false, orderStatus: OrderStatus): Promise<number> {
     let where: any = {
