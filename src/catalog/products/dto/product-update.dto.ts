@@ -34,4 +34,8 @@ export class ProductUpdateDto {
   @IsString()
   @IsOptional()
   photosOrder?: string;
+
+  @IsNumber()
+  @IsOptional()
+  shopId?: number;
 }

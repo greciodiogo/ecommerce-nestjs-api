@@ -38,10 +38,11 @@ export class ProductsController {
   @Get()
   @ApiOkResponse({ type: [Product], description: 'List of all products' })
   getProducts(@ReqUser() user?: User): Promise<Product[]> {
-    if (user && [Role.Admin, Role.Manager, Role.Sales].includes(user?.role)) {
-      return this.productsService.getProducts(true);
-    }
-    return this.productsService.getProducts();
+    const isPrivileged =
+      user && [Role.Admin, Role.Manager, Role.Sales].includes(user.role);
+  
+    // Passa o usuário e a flag de mostrar produtos ocultos
+    return this.productsService.getProducts(user, isPrivileged);
   }
 
   @Get('/:id')

@@ -8,10 +8,12 @@ import { ProductPhotosModule } from './product-photos/product-photos.module';
 import { AttributeTypesModule } from '../attribute-types/attribute-types.module';
 import { ProductsExporter } from './products.exporter';
 import { ProductsImporter } from './products.importer';
+import { Shop } from '../shops/models/shop.entity';
+import { User } from 'src/users/models/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, Attribute]),
+    TypeOrmModule.forFeature([Product, Attribute, Shop, User]),
     ProductPhotosModule,
     AttributeTypesModule,
   ],

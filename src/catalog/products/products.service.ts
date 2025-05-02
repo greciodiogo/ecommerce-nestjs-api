@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './models/product.entity';
 import { In, LessThan, Repository } from 'typeorm';
@@ -9,6 +9,8 @@ import { AttributeDto } from './dto/attribute.dto';
 import { NotFoundError } from '../../errors/not-found.error';
 import { OrderItem } from '../../sales/orders/models/order-item.entity';
 import { AttributeTypesService } from '../attribute-types/attribute-types.service';
+import { Shop } from '../shops/models/shop.entity';
+import { User } from 'src/users/models/user.entity';
 
 @Injectable()
 export class ProductsService {
@@ -17,11 +19,39 @@ export class ProductsService {
     @InjectRepository(Attribute)
     private attributesRepository: Repository<Attribute>,
     private attributeTypesService: AttributeTypesService,
+    @InjectRepository(Shop)
+    private readonly shopsRepository: Repository<Shop>
   ) {}
 
-  async getProducts(withHidden?: boolean): Promise<Product[]> {
+  async getProducts(user?: User, withHidden?: boolean): Promise<Product[]> {
+    let shopIds: number[] = [];
+    console.log("user")
+    console.log(user)
+  
+    if (user) {
+      const shops = await this.shopsRepository.find({
+        where: { user: { id: user.id } }, // pegando id do objeto User
+        select: ['id'],
+      });
+      shopIds = shops.map((shop) => shop.id);
+    }
+
+    console.log("shopId")
+    console.log(shopIds)
+  
+    const whereCondition: any = {};
+  
+    if (!withHidden) {
+      whereCondition.visible = true;
+    }
+  
+    if (shopIds.length > 0) {
+      whereCondition.shop = { id: In(shopIds) };
+    }
+  
     return this.productsRepository.find({
-      where: { visible: !withHidden ? true : undefined },
+      where: whereCondition,
+      relations: ['shop'],
     });
   }
 
@@ -37,8 +67,22 @@ export class ProductsService {
 
   async createProduct(productData: ProductCreateDto): Promise<Product> {
     const product = new Product();
-    Object.assign(product, productData);
+  
+    product.name = productData.name;
+    product.price = productData.price;
+    product.description = productData.description;
+    product.stock = productData.stock;
+    product.visible = productData.visible ?? true;
     product.photosOrder = '';
+  
+    if (productData.shopId) {
+      const shop = await this.shopsRepository.findOne({ where: { id: productData.shopId } });
+      if (!shop) {
+        throw new NotFoundException(`Loja com ID ${productData.shopId} não encontrada.`);
+      }
+      product.shop = shop;
+    }
+  
     return this.productsRepository.save(product);
   }
 

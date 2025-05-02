@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,6 +11,7 @@ import {
 import { Attribute } from './attribute.entity';
 import { ProductPhoto } from '../product-photos/models/product-photo.entity';
 import { ProductRating } from '../../product-ratings/models/product-rating.entity';
+import { Shop } from 'src/catalog/shops/models/shop.entity';
 
 @Entity('products')
 export class Product {
@@ -58,4 +61,11 @@ export class Product {
     cascade: true,
   })
   ratings: ProductRating[];
+
+  @ManyToOne(() => Shop, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'shopId' })
+  shop: Shop;
+  
+  @Column({ nullable: true })
+  shopId: number;
 }

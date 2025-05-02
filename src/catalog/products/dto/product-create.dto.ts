@@ -26,4 +26,8 @@ export class ProductCreateDto {
   @IsNumber()
   @Min(0)
   stock: number;
+
+  @IsNumber()
+  @IsOptional()
+  shopId?: number;
 }
