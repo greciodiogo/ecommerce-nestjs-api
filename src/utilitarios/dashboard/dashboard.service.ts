@@ -5,6 +5,7 @@ import { UsersService } from '../../users/users.service';
 import { Order } from 'src/sales/orders/models/order.entity';
 import { DashboardState } from './model/dashboard.model';
 import { OrderStatus } from 'src/sales/orders/models/order-status.enum';
+import { ProductsService } from 'src/catalog/products/products.service';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -24,6 +25,7 @@ export class DashboardService {
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
     private readonly usersService: UsersService,
+    private readonly productsService: ProductsService,
   ) {}
 
   // Método que calcula e retorna as métricas do Dashboard
@@ -34,6 +36,7 @@ export class DashboardService {
       completedDeliveriesWeek: await this.getOrderByStatus(false, OrderStatus.Delivered),
       newUsers: await this.usersService.getNewUsersCount(true),
       totalSales: await this.getTotalSales(),
+      lowStockProductsCount: await this.productsService.getLowStockProductsCount(5),
     };
   }
 

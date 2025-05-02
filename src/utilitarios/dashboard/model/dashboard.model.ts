@@ -15,4 +15,7 @@ export class DashboardState {
 
   @ApiProperty()
   totalSales: number;
+
+  @ApiProperty()
+  lowStockProductsCount: number;
 }
