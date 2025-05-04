@@ -62,7 +62,7 @@ export class ProductsController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.Manager)
+  @Roles(Role.Admin, Role.Manager, Role.Sales)
   @ApiUnauthorizedResponse({ description: 'User not logged in' })
   @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiCreatedResponse({ type: Product, description: 'Product created' })

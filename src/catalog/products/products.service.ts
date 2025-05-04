@@ -31,21 +31,24 @@ export class ProductsService {
     private readonly shopsService: ShopsService,
   ) {}
 
-  async getProducts(user?: User, withHidden = false): Promise<Product[]> {
+  async getProducts(user?: User, withHidden?: boolean): Promise<Product[]> {
+    let shopIds: number[] = [];
+
+    if (user) {
+      const shops = await this.shopsRepository.find({
+        where: { user: { id: user.id } }, // pegando id do objeto User
+        select: ['id'],
+      });
+      shopIds = shops.map((shop) => shop.id);
+    }
     const whereCondition: any = {};
   
     if (!withHidden) {
       whereCondition.visible = true;
     }
   
-    if (user) {
-      const shopIds = await this.shopsService.getShopIdsByUser(user);
-      if (shopIds.length > 0) {
-        whereCondition.shop = { id: In(shopIds) };
-      } else {
-        // Nenhuma loja encontrada para o usuário — retorna vazio.
-        return [];
-      }
+    if (shopIds.length > 0) {
+      whereCondition.shop = { id: In(shopIds) };
     }
   
     return this.productsRepository.find({
