@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Shop } from './models/shop.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,9 +19,13 @@ export class ShopsService {
   constructor(
     @InjectRepository(Shop)
     private readonly shopsRepository: Repository<Shop>,
+
     private readonly usersService: UsersService,
+
+    @Inject(forwardRef(() => ProductsService))
     private readonly productsService: ProductsService,
   ) {}
+
 
   async getShops(withUser = false, withProducts = false): Promise<Shop[]> {
     return this.shopsRepository.find({

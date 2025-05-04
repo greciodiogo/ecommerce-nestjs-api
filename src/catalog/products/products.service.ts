@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './models/product.entity';
 import { In, LessThan, Repository } from 'typeorm';
@@ -16,13 +16,19 @@ import { ShopsService } from '../shops/shops.service';
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product) private productsRepository: Repository<Product>,
+    @InjectRepository(Product)
+    private productsRepository: Repository<Product>,
+
     @InjectRepository(Attribute)
     private attributesRepository: Repository<Attribute>,
+
     private attributeTypesService: AttributeTypesService,
+
     @InjectRepository(Shop)
     private readonly shopsRepository: Repository<Shop>,
-    private ShopsService: ShopsService,
+
+    @Inject(forwardRef(() => ShopsService))
+    private readonly shopsService: ShopsService,
   ) {}
 
   async getProducts(user?: User, withHidden = false): Promise<Product[]> {
@@ -33,7 +39,7 @@ export class ProductsService {
     }
   
     if (user) {
-      const shopIds = await this.ShopsService.getShopIdsByUser(user);
+      const shopIds = await this.shopsService.getShopIdsByUser(user);
       if (shopIds.length > 0) {
         whereCondition.shop = { id: In(shopIds) };
       } else {
@@ -56,7 +62,7 @@ export class ProductsService {
     }
   
     if (user) {
-      const shopIds = await this.ShopsService.getShopIdsByUser(user);
+      const shopIds = await this.shopsService.getShopIdsByUser(user);
       if (shopIds.length === 0) {
         throw new NotFoundError('product', 'id', id.toString());
       }
@@ -76,7 +82,7 @@ export class ProductsService {
   }
   
 
-  async createProduct(productData: ProductCreateDto, user: User): Promise<Product> {
+  async createProduct(productData: ProductCreateDto, user?: User): Promise<Product> {
     const product = new Product();
   
     product.name = productData.name;

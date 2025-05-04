@@ -7,22 +7,35 @@ import { ProductsService } from './products.service';
 import { Product } from './models/product.entity';
 import { Attribute } from './models/attribute.entity';
 import { AttributeType } from '../attribute-types/models/attribute-type.entity';
+import { User } from 'src/users/models/user.entity';
 
 @Injectable()
 export class ProductsImporter implements Importer {
+  private user: User;
+
   constructor(private productsService: ProductsService) {}
+
+  setUser(user: User) {
+    this.user = user;
+  }
 
   async import(
     products: Collection,
-    idMaps: Record<string, IdMap>,
+    idMaps: Record<string, IdMap> = {},
   ): Promise<IdMap> {
+    if (!this.user) {
+      throw new Error('User not set in ProductsImporter');
+    }
+
     const parsedProducts = this.parseProducts(products, idMaps.attributeTypes);
     const idMap: IdMap = {};
+
     for (const product of parsedProducts) {
       const { id, ...createDto } = product;
-      const { id: newId } = await this.productsService.createProduct(createDto);
+      const { id: newId } = await this.productsService.createProduct(createDto, this.user);
       idMap[product.id] = newId;
     }
+
     return idMap;
   }
 
