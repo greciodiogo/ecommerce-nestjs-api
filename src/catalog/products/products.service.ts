@@ -48,15 +48,33 @@ export class ProductsService {
     });
   }
 
-  async getProduct(id: number, withHidden?: boolean): Promise<Product> {
+  async getProduct(id: number, withHidden = false, user?: User): Promise<Product> {
+    const whereCondition: any = { id };
+  
+    if (!withHidden) {
+      whereCondition.visible = true;
+    }
+  
+    if (user) {
+      const shopIds = await this.ShopsService.getShopIdsByUser(user);
+      if (shopIds.length === 0) {
+        throw new NotFoundError('product', 'id', id.toString());
+      }
+      whereCondition.shop = { id: In(shopIds) };
+    }
+  
     const product = await this.productsRepository.findOne({
-      where: { id, visible: !withHidden ? true : undefined },
+      where: whereCondition,
+      relations: ['shop'],
     });
+  
     if (!product) {
       throw new NotFoundError('product', 'id', id.toString());
     }
+  
     return product;
   }
+  
 
   async createProduct(productData: ProductCreateDto): Promise<Product> {
     const product = new Product();
