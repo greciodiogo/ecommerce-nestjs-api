@@ -8,10 +8,11 @@ import { ShopsExporter } from './shops.exporter';
 import { ShopsImporter } from './shops.importer';
 import { ShopItem } from './models/shop-item.entity';
 import { ProductsModule } from '../products/products.module';
+import { User } from 'src/users/models/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Shop, ShopItem]),
+    TypeOrmModule.forFeature([Shop, ShopItem, User]),
     UsersModule, ProductsModule
   ],
   providers: [ShopsService, ShopsExporter, ShopsImporter],

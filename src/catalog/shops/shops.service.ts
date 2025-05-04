@@ -11,6 +11,7 @@ import { Role } from '../../users/models/role.enum';
 import { ShopItemDto } from './dto/shop-item.dto';
 import { ShopItem } from './models/shop-item.entity'; 
 import * as argon2 from 'argon2';
+import { User } from 'src/users/models/user.entity';
 
 
 @Injectable()
@@ -112,4 +113,13 @@ export class ShopsService {
     await this.shopsRepository.delete({ id });
     return;
   }
+
+  async getShopIdsByUser(user: User): Promise<number[]> {
+    const shops = await this.shopsRepository.find({
+      where: { user: { id: user.id } },
+      select: ['id'],
+    });
+    return shops.map((shop) => shop.id);
+  }
+    
 }

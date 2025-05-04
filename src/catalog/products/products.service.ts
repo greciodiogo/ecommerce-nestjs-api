@@ -11,6 +11,7 @@ import { OrderItem } from '../../sales/orders/models/order-item.entity';
 import { AttributeTypesService } from '../attribute-types/attribute-types.service';
 import { Shop } from '../shops/models/shop.entity';
 import { User } from 'src/users/models/user.entity';
+import { ShopsService } from '../shops/shops.service';
 
 @Injectable()
 export class ProductsService {
@@ -20,33 +21,25 @@ export class ProductsService {
     private attributesRepository: Repository<Attribute>,
     private attributeTypesService: AttributeTypesService,
     @InjectRepository(Shop)
-    private readonly shopsRepository: Repository<Shop>
+    private readonly shopsRepository: Repository<Shop>,
+    private ShopsService: ShopsService,
   ) {}
 
-  async getProducts(user?: User, withHidden?: boolean): Promise<Product[]> {
-    let shopIds: number[] = [];
-    console.log("user")
-    console.log(user)
-  
-    if (user) {
-      const shops = await this.shopsRepository.find({
-        where: { user: { id: user.id } }, // pegando id do objeto User
-        select: ['id'],
-      });
-      shopIds = shops.map((shop) => shop.id);
-    }
-
-    console.log("shopId")
-    console.log(shopIds)
-  
+  async getProducts(user?: User, withHidden = false): Promise<Product[]> {
     const whereCondition: any = {};
   
     if (!withHidden) {
       whereCondition.visible = true;
     }
   
-    if (shopIds.length > 0) {
-      whereCondition.shop = { id: In(shopIds) };
+    if (user) {
+      const shopIds = await this.ShopsService.getShopIdsByUser(user);
+      if (shopIds.length > 0) {
+        whereCondition.shop = { id: In(shopIds) };
+      } else {
+        // Nenhuma loja encontrada para o usuário — retorna vazio.
+        return [];
+      }
     }
   
     return this.productsRepository.find({
