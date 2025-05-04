@@ -76,7 +76,7 @@ export class ProductsService {
   }
   
 
-  async createProduct(productData: ProductCreateDto): Promise<Product> {
+  async createProduct(productData: ProductCreateDto, user: User): Promise<Product> {
     const product = new Product();
   
     product.name = productData.name;
@@ -86,16 +86,20 @@ export class ProductsService {
     product.visible = productData.visible ?? true;
     product.photosOrder = '';
   
-    if (productData.shopId) {
-      const shop = await this.shopsRepository.findOne({ where: { id: productData.shopId } });
-      if (!shop) {
-        throw new NotFoundException(`Loja com ID ${productData.shopId} não encontrada.`);
-      }
-      product.shop = shop;
+    const shop = await this.shopsRepository.findOne({
+      where: { user: { id: user.id } },
+    });
+  
+    if (!shop) {
+      throw new NotFoundException(`Loja associada ao utilizador não encontrada.`);
     }
+  
+    product.shop = shop;
   
     return this.productsRepository.save(product);
   }
+  
+  
 
   async updateProduct(
     id: number,
