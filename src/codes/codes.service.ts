@@ -16,16 +16,27 @@ export class CodesService {
     private readonly mailService: MailService, 
   ) {}
 
-  async sendVerificationCode(
-    email: string,
-  ): Promise<any> {
-    const validCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  async sendVerificationCode(email: string): Promise<any> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+  
     try {
-      await this.addCode(email, validCode, expiration)
-      return await this.sendVerificationCodeToEmail(email, validCode, expiration)
+      // Tenta criar o código no banco
+      const createdCode = await this.addCode(email, code, expiration);
+  
+      // Garante que foi criado com sucesso
+      if (!createdCode) {
+        throw new Error('Falha ao salvar o código no banco de dados');
+      }
+  
+      // Só envia e-mail se salvou com sucesso
+      await this.sendVerificationCodeToEmail(email, code, expiration);
+  
+      return { message: 'Código de verificação enviado com sucesso' };
+  
     } catch (error) {
-      throw new ConflictError('code', 'email', email);
+      console.error('Erro ao enviar código de verificação:', error);
+      throw new ConflictError('sendVerificationCode', 'internal', 'Não foi possível enviar o código. Tente novamente.');
     }
   }
 
@@ -34,8 +45,17 @@ export class CodesService {
     code: string,
   ): Promise<any> {
     try {
-      const validEmail = await this.codesRepository.findOne({ where: {email}})
-      return { message: 'Código validado com sucesso'}
+      const record = await this.codesRepository.findOne({ where: { email, code } });
+
+      if (!record) {
+        throw new ConflictError('code', 'email', 'Código inválido');
+      }
+      
+      const isExpired = record.expiresAt.getTime() < Date.now();
+      if (isExpired) {
+        throw new ConflictError('code', 'expiresAt', 'Código expirado');
+      }
+      return { message: 'Código validado com sucesso' }
     } catch (error) {
       throw new ConflictError('code', 'email', email);
     }
