@@ -23,6 +23,7 @@ import {
   PickType,
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
+import { SendVerificationCodeDto } from './dto/verificationCode.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -36,6 +37,22 @@ export class AuthController {
   @ApiConflictResponse({ description: 'User with given email already exists' })
   async register(@Body() registerDto: RegisterDto): Promise<User> {
     return this.authService.register(registerDto);
+  }
+
+  @Post('send-verification-code')
+  @ApiCreatedResponse({ type: SendVerificationCodeDto, description: 'Send Verification Code to User' })
+  @ApiBadRequestResponse({ description: 'Invalid Email' })
+  @ApiConflictResponse({ description: 'User with given email does not exists' })
+  async sendVerificationCode(@Body() codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+    return this.authService.sendVerificationCode(codeDto);
+  }
+
+  @Post('verify-code')
+  @ApiCreatedResponse({ type: SendVerificationCodeDto, description: 'Send Verification Code to User' })
+  @ApiBadRequestResponse({ description: 'Invalid Email' })
+  @ApiConflictResponse({ description: 'User with given email does not exists' })
+  async verifyCode(@Body() codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+    return this.authService.verifyCode(codeDto);
   }
 
   @UseGuards(LocalAuthGuard)

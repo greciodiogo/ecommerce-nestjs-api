@@ -9,7 +9,7 @@ RUN npm i -g @nestjs/cli
 
 FROM base as dev
 
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 COPY . .
 

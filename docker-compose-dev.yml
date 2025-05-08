@@ -18,6 +18,10 @@ services:
       SESSION_SECRET: secret
       ADMIN_EMAIL: admin@test.local
       ADMIN_PASSWORD: test1234
+      MAIL_HOST:  smtp.gmail.com
+      MAIL_PORT:  587
+      EMAIL_USER: fonebahia8@gmail.com
+      EMAIL_PASS: bcue urio gwrt fmow
     command: npm run start:dev
     ports:
       - "80:80"

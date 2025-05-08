@@ -6,11 +6,14 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { Role } from '../users/models/role.enum';
+import { SendVerificationCodeDto } from './dto/verificationCode.dto';
+import { CodesService } from './../codes/codes.service';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   constructor(
     private usersService: UsersService,
+    private codesService: CodesService,
     private config: ConfigService,
   ) {}
 
@@ -38,6 +41,14 @@ export class AuthService implements OnModuleInit {
       registerDto.firstName,
       registerDto.lastName,
     );
+  }
+
+  async sendVerificationCode(codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+    return await this.codesService.sendVerificationCode(codeDto.email);
+  }
+
+  async verifyCode(codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+    return await this.codesService.verifyCode(codeDto.email, codeDto.code);
   }
 
   async validateUser(loginDto: LoginDto): Promise<User | null> {
