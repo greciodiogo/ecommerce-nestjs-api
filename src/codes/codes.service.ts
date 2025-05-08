@@ -48,7 +48,7 @@ export class CodesService {
       const record = await this.codesRepository.findOne({ where: { email, code } });
 
       if (!record) {
-        throw new ConflictError('code', 'email', 'Código inválido');
+        throw new ConflictError('code', 'expiresAt', 'Código inválido');
       }
       
       const isExpired = record.expiresAt.getTime() < Date.now();
