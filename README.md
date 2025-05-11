@@ -1,4 +1,4 @@
-# E-Commerce Platform - NestJS API
+# Encontrar E-Commerce Platform - NestJS API
 
 REST API for the [E-commerce Platform project](https://github.com/michalmarchewczyk/ecommerce-platform)
 
