@@ -24,6 +24,7 @@ export class ProductsExporter implements Exporter<Product> {
     preparedProduct.description = product.description;
     preparedProduct.price = product.price;
     preparedProduct.stock = product.stock;
+    preparedProduct.comission = product.comission;
     preparedProduct.visible = product.visible;
     preparedProduct.attributes = product.attributes.map((a) =>
       this.prepareAttribute(a),

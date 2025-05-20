@@ -68,6 +68,7 @@ export class ProductsImporter implements Importer {
       parsedProduct.description = product.description as string;
       parsedProduct.price = product.price as number;
       parsedProduct.stock = product.stock as number;
+      parsedProduct.comission = product.comission as number;
       parsedProduct.visible = product.visible as boolean;
       if (typeof product.attributes === 'string') {
         product.attributes = JSON.parse(product.attributes);

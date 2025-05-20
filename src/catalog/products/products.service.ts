@@ -92,6 +92,7 @@ export class ProductsService {
     product.price = productData.price;
     product.description = productData.description;
     product.stock = productData.stock;
+    product.comission = productData.comission;
     product.visible = productData.visible ?? true;
     product.photosOrder = '';
   

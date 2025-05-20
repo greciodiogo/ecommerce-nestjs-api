@@ -28,6 +28,10 @@ export class ProductCreateDto {
   stock: number;
 
   @IsNumber()
+  @Min(0)
+  comission: number;
+
+  @IsNumber()
   @IsOptional()
   shopId?: number;
 }
