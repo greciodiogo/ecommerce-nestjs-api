@@ -90,13 +90,13 @@ export class ProductsService {
   
     product.name = productData.name;
     product.price = productData.price;
-    product.salesPrice = productData.salesPrice ?? productData.price * 1.1;
+    product.salesPrice = productData.price * 1.1;
     const calculatedSalesPrice = productData.price * 1.1;
 
     if (productData.salesPrice !== undefined && productData.salesPrice < productData.price) {
       throw new BadRequestException('O preço de venda (salesPrice) não pode ser inferior ao preço base (price).');
     }
-    product.salesPrice = productData.salesPrice ?? calculatedSalesPrice;
+    product.salesPrice = calculatedSalesPrice;
     product.description = productData.description;
     product.stock = productData.stock;
     // product.comission = productData.comission;

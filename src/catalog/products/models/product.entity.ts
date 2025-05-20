@@ -30,7 +30,7 @@ export class Product {
   @Column({ type: 'double precision' })
   price: number;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', nullable: true })
   salesPrice: number;
 
   @Column({ default: true })

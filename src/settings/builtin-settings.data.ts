@@ -46,4 +46,11 @@ export const BUILTIN_SETTINGS: SettingCreateDto[] = [
     type: SettingType.Boolean,
     defaultValue: 'true',
   },
+  {
+    builtin: true,
+    name: 'Products default comission %',
+    description: 'Allow to set a default product comission value',
+    type: SettingType.Number,
+    defaultValue: '10',
+  },
 ];
