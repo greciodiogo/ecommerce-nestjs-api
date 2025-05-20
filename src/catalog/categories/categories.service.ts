@@ -33,6 +33,9 @@ export class CategoriesService {
   ): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id },
+      order: {
+        id: 'ASC', //g ou 'DESC' se quiser mais recentes primeiro
+    },
       relations: [
         'parentCategory',
         ...(children ? ['childCategories'] : []),

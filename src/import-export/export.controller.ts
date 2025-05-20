@@ -26,13 +26,25 @@ export class ExportController {
     schema: fileResponseSchema,
     description: 'Exported data',
   })
-  @ApiProduces('application/json', 'application/gzip')
+  @ApiProduces('application/json', 'application/gzip', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') // adicionando zip para xlsx
   async export(
     @Res({ passthrough: true }) res: Response,
     @Body() data: ExportDto,
   ) {
-    const contentType =
-      data.format === 'csv' ? 'application/gzip' : 'application/json';
+    let contentType: string;
+
+    switch (data.format) {
+      case 'csv':
+        contentType = 'application/gzip';
+        break;
+      case 'xlsx':
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        break;
+      case 'json':
+      default:
+        contentType = 'application/json';
+    }
+
     res.header('Content-Type', contentType);
     res.header(
       'Content-Disposition',

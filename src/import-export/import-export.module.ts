@@ -11,6 +11,7 @@ import { ZipSerializer } from './zip-serializer.service';
 import { WishlistsModule } from '../wishlists/wishlists.module';
 import { SalesModule } from '../sales/sales.module';
 import { PagesModule } from '../pages/pages.module';
+import { ExcelSerializer } from './excel-serializer.service';
 
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { PagesModule } from '../pages/pages.module';
     SalesModule,
   ],
   controllers: [ExportController, ImportController],
-  providers: [ExportService, ImportService, JsonSerializer, ZipSerializer],
+  providers: [ExportService, ImportService, JsonSerializer, ZipSerializer, ExcelSerializer],
 })
 export class ImportExportModule {}

@@ -7,6 +7,6 @@ export class ExportDto {
   @IsEnum(DataType, { each: true })
   data: DataType[];
 
-  @IsIn(['json', 'csv'])
-  format: 'json' | 'csv';
+  @IsIn(['json', 'csv', 'xlsx'])
+  format: 'json' | 'csv' | 'xlsx';
 }

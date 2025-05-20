@@ -55,8 +55,8 @@ export class Product {
 
   @Column({ default: '' })
   photosOrder: string;
-
-  @Column({ type: 'double precision', default: 0 })
+  
+  @Column({ default: 0 })
   comission: number;
 
   @OneToMany(() => ProductRating, (rating) => rating.product, {

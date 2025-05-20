@@ -17,6 +17,7 @@ import { OrdersExporter } from '../sales/orders/orders.exporter';
 import { ReturnsExporter } from '../sales/returns/returns.exporter';
 import { ProductPhotosExporter } from '../catalog/products/product-photos/product-photos.exporter';
 import { PagesExporter } from '../pages/pages.exporter';
+import { ExcelSerializer } from './excel-serializer.service';
 
 @Injectable()
 export class ExportService {
@@ -38,6 +39,7 @@ export class ExportService {
   constructor(
     private jsonSerializer: JsonSerializer,
     private zipSerializer: ZipSerializer,
+    private excelSerializer: ExcelSerializer, // nova dependência
     private settingExporter: SettingsExporter,
     private pagesExporter: PagesExporter,
     private usersExporter: UsersExporter,
@@ -52,8 +54,8 @@ export class ExportService {
     private returnsExporter: ReturnsExporter,
   ) {}
 
-  getFilename(format: 'json' | 'csv') {
-    const ext = format === 'csv' ? 'tar.gz' : 'json';
+  getFilename(format: 'json' | 'csv' | 'xlsx') {
+    const ext = format === 'json' ? 'json' : format === 'csv' ? 'tar.gz' : 'zip';
     const date = new Date();
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -64,7 +66,7 @@ export class ExportService {
     return `export_${year}${month}${day}_${hours}${minutes}${seconds}.${ext}`;
   }
 
-  async export(data: DataType[], format: 'json' | 'csv') {
+  async export(data: DataType[], format: 'json' | 'csv' | 'xlsx') {
     checkDataTypeDependencies(data);
     const toExport: Record<string, any[]> = {};
     for (const key of data) {
@@ -80,6 +82,8 @@ export class ExportService {
         ? toExport[DataType.ProductPhotos].map((photo) => photo.path)
         : undefined;
       return await this.zipSerializer.serialize(toExport, photoPaths);
+    } else if (format === 'xlsx') {
+      return await this.excelSerializer.serialize(toExport);
     } else {
       throw new GenericError('could not serialize export output');
     }
