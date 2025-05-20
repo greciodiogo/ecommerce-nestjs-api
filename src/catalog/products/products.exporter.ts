@@ -23,7 +23,7 @@ export class ProductsExporter implements Exporter<Product> {
     preparedProduct.name = product.name;
     preparedProduct.description = product.description;
     preparedProduct.price = product.price;
-    preparedProduct.salesPrice = product.salesPrice;
+    preparedProduct.purchasePrice = product.purchasePrice;
     preparedProduct.stock = product.stock;
     preparedProduct.comission = product.comission;
     preparedProduct.visible = product.visible;

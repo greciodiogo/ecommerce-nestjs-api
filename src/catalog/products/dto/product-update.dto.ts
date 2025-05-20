@@ -21,7 +21,7 @@ export class ProductUpdateDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  salesPrice?: number;
+  purchasePrice?: number;
 
   @IsBoolean()
   @IsOptional()

@@ -27,11 +27,11 @@ export class Product {
   @Column()
   name: string;
 
-  @Column({ type: 'double precision' })
+  @Column({ type: 'double precision', nullable: true })
   price: number;
 
   @Column({ type: 'double precision', nullable: true })
-  salesPrice: number;
+  purchasePrice: number;
 
   @Column({ default: true })
   visible: boolean;

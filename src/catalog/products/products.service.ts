@@ -51,10 +51,19 @@ export class ProductsService {
       whereCondition.shop = { id: In(shopIds) };
     }
   
-    return this.productsRepository.find({
+    const products = await this.productsRepository.find({
       where: whereCondition,
       relations: ['shop'],
     });
+
+    // ✅ Se price for nulo, define como price + 10%
+    for (const product of products) {
+      if (product.price == null) {
+        product.price = product.purchasePrice * 1.1;
+      }
+    }
+
+    return products;
   }
 
   async getProduct(id: number, withHidden = false, user?: User): Promise<Product> {
@@ -73,14 +82,19 @@ export class ProductsService {
     }
   
     const product = await this.productsRepository.findOne({
-      where: whereCondition,
-      relations: ['shop'],
+    where: whereCondition,
+    relations: ['shop'],
     });
-  
+
     if (!product) {
       throw new NotFoundError('product', 'id', id.toString());
     }
-  
+
+    // ✅ Corrige price se estiver ausente
+    if (product.price == null) {
+      product.price = product.purchasePrice * 1.1;
+    }
+
     return product;
   }
   
@@ -90,13 +104,13 @@ export class ProductsService {
   
     product.name = productData.name;
     product.price = productData.price;
-    product.salesPrice = productData.price * 1.1;
-    const calculatedSalesPrice = productData.price * 1.1;
+    product.price = productData.purchasePrice * 1.1;
+    const calculatedSalesPrice = productData.purchasePrice * 1.1;
 
-    if (productData.salesPrice !== undefined && productData.salesPrice < productData.price) {
-      throw new BadRequestException('O preço de venda (salesPrice) não pode ser inferior ao preço base (price).');
+    if (productData.price !== undefined && productData.price < productData.purchasePrice) {
+      throw new BadRequestException('O preço de venda (purchasePrice) não pode ser inferior ao preço base (price).');
     }
-    product.salesPrice = calculatedSalesPrice;
+    product.purchasePrice = calculatedSalesPrice;
     product.description = productData.description;
     product.stock = productData.stock;
     // product.comission = productData.comission;
@@ -130,26 +144,26 @@ export class ProductsService {
     // Atualiza os campos existentes
     Object.assign(product, productData);
 
-    // Recalcula o salesPrice se necessário
+    // Recalcula o purchasePrice se necessário
     if (productData.comission !== undefined) {
       const commissionPercentage = productData.comission;
-      const basePrice = productData.price ?? product.price; // usa o novo preço se informado
+      const basePrice = productData.purchasePrice ?? product.purchasePrice; // usa o novo preço se informado
 
       const calculatedSalesPrice = basePrice * (1 + commissionPercentage / 100);
 
-      // Só recalcula salesPrice se não foi informado manualmente
-      if (productData.salesPrice === undefined) {
-        product.salesPrice = calculatedSalesPrice;
+      // Só recalcula price se não foi informado manualmente
+      if (productData.price === undefined) {
+        product.price = calculatedSalesPrice;
       }
     }
 
-    // Validação: salesPrice não pode ser menor que price
-    const finalPrice = productData.price ?? product.price;
-    const finalSalesPrice = productData.salesPrice ?? product.salesPrice;
+    // Validação: price não pode ser menor que price
+    const finalPrice = productData.price ?? product.purchasePrice;
+    const finalSalesPrice = productData.price ?? product.price;
 
     if (finalSalesPrice < finalPrice) {
       throw new BadRequestException(
-        'O preço de venda (salesPrice) não pode ser inferior ao preço base (price).',
+        'O preço de venda (price) não pode ser inferior ao preço base (purchasePrice).',
       );
     }
 
