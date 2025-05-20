@@ -30,6 +30,9 @@ export class Product {
   @Column({ type: 'double precision' })
   price: number;
 
+  @Column({ type: 'double precision' })
+  salesPrice: number;
+
   @Column({ default: true })
   visible: boolean;
 

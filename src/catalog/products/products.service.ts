@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './models/product.entity';
 import { In, LessThan, Repository } from 'typeorm';
@@ -29,7 +29,7 @@ export class ProductsService {
 
     @Inject(forwardRef(() => ShopsService))
     private readonly shopsService: ShopsService,
-  ) {}
+  ) { }
 
   async getProducts(user?: User, withHidden?: boolean): Promise<Product[]> {
     let shopIds: number[] = [];
@@ -90,9 +90,16 @@ export class ProductsService {
   
     product.name = productData.name;
     product.price = productData.price;
+    product.salesPrice = productData.salesPrice ?? productData.price * 1.1;
+    const calculatedSalesPrice = productData.price * 1.1;
+
+    if (productData.salesPrice !== undefined && productData.salesPrice < productData.price) {
+      throw new BadRequestException('O preço de venda (salesPrice) não pode ser inferior ao preço base (price).');
+    }
+    product.salesPrice = productData.salesPrice ?? calculatedSalesPrice;
     product.description = productData.description;
     product.stock = productData.stock;
-    product.comission = productData.comission;
+    // product.comission = productData.comission;
     product.visible = productData.visible ?? true;
     product.photosOrder = '';
   
@@ -119,9 +126,36 @@ export class ProductsService {
     if (productData.photosOrder) {
       await this.checkProductPhotosOrder(product, productData.photosOrder);
     }
+
+    // Atualiza os campos existentes
     Object.assign(product, productData);
+
+    // Recalcula o salesPrice se necessário
+    if (productData.comission !== undefined) {
+      const commissionPercentage = productData.comission;
+      const basePrice = productData.price ?? product.price; // usa o novo preço se informado
+
+      const calculatedSalesPrice = basePrice * (1 + commissionPercentage / 100);
+
+      // Só recalcula salesPrice se não foi informado manualmente
+      if (productData.salesPrice === undefined) {
+        product.salesPrice = calculatedSalesPrice;
+      }
+    }
+
+    // Validação: salesPrice não pode ser menor que price
+    const finalPrice = productData.price ?? product.price;
+    const finalSalesPrice = productData.salesPrice ?? product.salesPrice;
+
+    if (finalSalesPrice < finalPrice) {
+      throw new BadRequestException(
+        'O preço de venda (salesPrice) não pode ser inferior ao preço base (price).',
+      );
+    }
+
     return this.productsRepository.save(product);
   }
+
 
   async checkProductPhotosOrder(product: Product, newOrder: string) {
     const photos = product.photos;
@@ -195,13 +229,13 @@ export class ProductsService {
     return this.productsRepository.save(product);
   }
 
-    async getLowStockProductsCount(quantity): Promise<number> {
-      const lowStockProducts = await this.productsRepository.count({
-        where: {
-          stock: LessThan(quantity), // Usando LessThan ao invés de lt
-        },
-      });
-    
-      return lowStockProducts;
-    }
+  async getLowStockProductsCount(quantity): Promise<number> {
+    const lowStockProducts = await this.productsRepository.count({
+      where: {
+        stock: LessThan(quantity), // Usando LessThan ao invés de lt
+      },
+    });
+
+    return lowStockProducts;
+  }
 }

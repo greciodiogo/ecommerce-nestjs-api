@@ -67,6 +67,7 @@ export class ProductsImporter implements Importer {
       parsedProduct.name = product.name as string;
       parsedProduct.description = product.description as string;
       parsedProduct.price = product.price as number;
+      parsedProduct.salesPrice = product.salesPrice as number;
       parsedProduct.stock = product.stock as number;
       parsedProduct.comission = product.comission as number;
       parsedProduct.visible = product.visible as boolean;

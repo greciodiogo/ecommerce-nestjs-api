@@ -18,6 +18,11 @@ export class ProductUpdateDto {
   @IsOptional()
   price?: number;
 
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  salesPrice?: number;
+
   @IsBoolean()
   @IsOptional()
   visible?: boolean;
