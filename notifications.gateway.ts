@@ -7,11 +7,11 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-@WebSocketGateway({
-  cors: {
-    origin: '*', // Configure corretamente em produção
-  },
-})
+// @WebSocketGateway({
+//   cors: {
+//     origin: '*', // Configure corretamente em produção
+//   },
+// })
 export class NotificationsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
