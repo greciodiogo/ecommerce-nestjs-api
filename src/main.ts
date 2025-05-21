@@ -10,7 +10,7 @@ async function bootstrap() {
   const nodeEnv = configService.get('nodeEnv');
 
     app.enableCors({
-      origin: true,
+      origin: ['https://admin.encontrarshopping.com', 'https://encontrarshopping.com'],
       credentials: true,
     });
   
