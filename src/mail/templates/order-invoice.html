@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fatura do Pedido</title>
+  </head>
+  <style>
+    body {
+        background-color: #efefef;
+    }
+    .order-review {
+      width: 100%;
+      max-width: 650px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      /* box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); */
+      margin: auto;
+      font-family: Arial, sans-serif;
+    }
+
+    .order-review .title {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .order-review .subtitle {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .order-review .details,
+    .order-review .pricing {
+      border-top: 2px solid #e6e6e6;
+      padding-top: 15px;
+      margin-top: 10px;
+    }
+
+    .order-review .row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+
+    .order-review .pricing .row {
+      flex-direction: row;
+    }
+
+    .order-review .pricing .row span {
+      color: #04040b;
+      font-weight: 400;
+      font-size: 18px;
+    }
+
+    .order-review .label {
+      font-weight: 500;
+      font-size: 18px;
+    }
+
+    .order-review .value {
+      font-weight: normal;
+      font-size: 18px;
+      color: #808080;
+    }
+
+    .order-review .track-order {
+      font-weight: 500;
+      font-size: 18px;
+      margin: 10px 0;
+      color: #04040b;
+      cursor: pointer;
+      border-bottom: 2px solid #000000;
+    }
+
+    .order-review .total {
+      /* border-top: 1px solid #ddd; */
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+
+      padding-top: 10px;
+      margin-top: 10px;
+      padding: 10px 0;
+      border-bottom: 2px solid #e6e6e6;
+    }
+
+    .order-review .total span {
+      font-size: 20px;
+      font-weight: 500;
+    }
+  </style>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #4a4a4a;
+      padding: 20px;
+    "
+  >
+    <main width="100%" cellspacing="0" cellpadding="0">
+      <div align="center" style="max-width: 550px; width: 100%; margin: 0 auto">
+        <div style="border-bottom: 1px solid #4747472e; margin-bottom: 20px">
+          <img
+            src="https://encontrarshopping.com/assets_ecommerce/logo.png"
+            alt="Logo"
+            width="200"
+          />
+        </div>
+
+        <h2 style="color: #333333">Obrigado pela sua compra!</h2>
+        <p style="margin-bottom: 30px">
+          Segue abaixo o resumo da sua encomenda.
+        </p>
+
+        <div className="order-review">
+          <div className="details">
+            <div className="row">
+              <span className="label">Data do Pedido</span>
+              <span className="value"
+                >{{order.created}}</span
+              >
+            </div>
+            <div className="row">
+              <span className="label">Método de Pagamento</span>
+              <span className="value">{{order.payment.method.name}}</span>
+            </div>
+            <div className="row">
+              <span className="track-order">Itens da compra</span>
+            </div>
+            <div className="row">
+              <span className="label">Método de Entrega</span>
+              <span className="value">{{order.delivery.method.name}}</span>
+            </div>
+          </div>
+
+          <div className="pricing">
+            <!-- <div className="row">
+              <span>{t('review.subtotal')}</span>
+              <span>{fnService.numberFormat(subtotal)} Kz</span>
+            </div> -->
+            <!-- <div className="row">
+              <span>{t('review.service_fee')}</span>
+              <span>{fnService.numberFormat(serviceCost)} Kz</span>
+            </div> -->
+            <div className="row">
+              <span>Desconto</span>
+              <span>0 Kz</span>
+            </div>
+            <div className="row">
+              <span>Taxa Entrega</span>
+              <span>{{order.delivery.method.price}} Kz</span>
+            </div>
+          </div>
+
+          <div className="total">
+            <span>Total</span>
+            <!-- <span>{{order.price}} Kz</span> -->
+            <span>{{0}} Kz</span>
+          </div>
+
+        </div>
+
+        <p>
+          Se tiver alguma dúvida sobre seu pedido, entre em contato conosco pelo
+          e-mail
+          <a href="mailto:suporte@encontrarshopping.com" style="color: #b66506"
+            >suporte@encontrarshopping.com</a
+          >.
+        </p>
+
+        <p>
+          Obrigado por comprar conosco no
+          <strong style="background-color: #fec85c"
+            >EncontrarShopping.com</strong
+          >!
+        </p>
+
+        <hr
+          style="margin-top: 40px; border: none; border-top: 1px solid #ccc"
+        />
+        <!-- <p style="font-size: 12px; color: #888;">© {{year}} EncontrarShopping.com - Todos os direitos reservados.</p> -->
+      </div>
+    </main>
+  </body>
+</html>

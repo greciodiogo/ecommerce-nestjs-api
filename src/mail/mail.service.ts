@@ -46,4 +46,23 @@ export class MailService {
       console.error('Erro ao enviar e-mail:', err);
     }
   }
+
+  async sendOrderInvoiceEmail(to: string, order: any) {
+    // const final_order = 
+    const html = this.compileTemplate('order-invoice.html', { order });
+    const subject = 'Resumo do Pedido'
+    const mailOptions = {
+      from: this.configService.get<string>('email.user'),
+      to,
+      subject: subject,
+      html,
+    };
+
+    try {
+      await this.emailTransport().sendMail(mailOptions);
+      return { message: 'Resumo do pedido enviado para o seu email.' };
+    } catch (err) {
+      console.error('Erro ao enviar e-mail:', err);
+    }
+  }
 }
