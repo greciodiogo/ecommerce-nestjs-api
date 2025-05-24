@@ -13,6 +13,7 @@ import { DeliveryMethodsModule } from '../delivery-methods/delivery-methods.modu
 import { PaymentMethodsModule } from '../payment-methods/payment-methods.module';
 import { OrdersExporter } from './orders.exporter';
 import { OrdersImporter } from './orders.importer';
+import { MailService } from 'src/mail/mail.service';
 
 @Module({
   imports: [
@@ -22,8 +23,8 @@ import { OrdersImporter } from './orders.importer';
     DeliveryMethodsModule,
     PaymentMethodsModule,
   ],
-  providers: [OrdersService, OrdersSubscriber, OrdersExporter, OrdersImporter],
+  providers: [OrdersService, OrdersSubscriber, OrdersExporter, OrdersImporter, MailService],
   controllers: [OrdersController],
-  exports: [OrdersService, OrdersExporter, OrdersImporter],
+  exports: [OrdersService, OrdersExporter, OrdersImporter, MailService],
 })
 export class OrdersModule {}

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Between, Repository } from 'typeorm';
+import { Between, Column, Repository } from 'typeorm';
 import { Order } from './models/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderCreateDto } from './dto/order-create.dto';
@@ -16,6 +16,8 @@ import { Role } from '../../users/models/role.enum';
 import { OrderItemDto } from './dto/order-item.dto';
 import { OrderStatus } from './models/order-status.enum';
 import { User } from 'src/users/models/user.entity';
+import { MailService } from 'src/mail/mail.service';
+import moment from 'moment';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -29,6 +31,11 @@ export const endOfWeek = new Date(startOfWeek);
 endOfWeek.setDate(startOfWeek.getDate() + 6);
 endOfWeek.setHours(23, 59, 59, 999);
 
+class OrderItemWithTotal extends OrderItem {
+  @Column({ type: 'double precision' })
+  total: number;
+}
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -36,9 +43,10 @@ export class OrdersService {
     private readonly ordersRepository: Repository<Order>,
     private readonly usersService: UsersService,
     private readonly productsService: ProductsService,
+    private readonly mailService: MailService,
     private readonly deliveryMethodsService: DeliveryMethodsService,
     private readonly paymentMethodsService: PaymentMethodsService,
-  ) {}
+  ) { }
 
   async getOrders(withUser = false, withProducts = false): Promise<Order[]> {
     return this.ordersRepository.find({
@@ -66,31 +74,31 @@ export class OrdersService {
       where.status = orderStatus;
     }
 
-    return this.ordersRepository.count({where});
+    return this.ordersRepository.count({ where });
   }
 
   async getTotalSales(weekly: boolean = false): Promise<number> {
     let where: any = {
       status: OrderStatus.Confirmed,
     };
-  
+
     if (weekly) {
       where.updated = Between(startOfWeek, endOfWeek);
     }
-  
+
     const confirmedOrders = await this.ordersRepository.find({
       where,
       relations: ['items'],
     });
-  
+
     let total = 0;
-  
+
     for (const order of confirmedOrders) {
       for (const item of order.items) {
         total += item.price * item.quantity;
       }
     }
-  
+
     return total;
   }
 
@@ -176,7 +184,25 @@ export class OrdersService {
     Object.assign(payment, orderData.payment);
     order.payment = payment;
     order.payment.method = paymentMethod;
-    return this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
+
+    const total = order.items.reduce((acc, item) => {
+      return acc + item.price * item.quantity;
+    }, 0);
+
+    const savedOrder = await this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
+
+    const orderForEmail = {
+      ...savedOrder,
+      total,
+      createdFormatted: moment(savedOrder.created).format('DD/MM/YYYY [às] HH:mm'),
+    };
+
+    // Envia o email com os dados formatados
+    if (savedOrder) {
+      await this.mailService.sendOrderInvoiceEmail(orderData.contactEmail, orderForEmail);
+    }
+
+    return savedOrder;
   }
 
   private async getItems(order: Order, items: OrderItemDto[]) {
@@ -185,13 +211,14 @@ export class OrdersService {
       const product = await this.productsService.getProduct(
         item.productId,
         order.user &&
-          [Role.Admin, Role.Manager, Role.Sales].includes(order.user.role),
+        [Role.Admin, Role.Manager, Role.Sales].includes(order.user.role),
       );
       res.push({
         product,
         quantity: item.quantity,
         price: product.price,
-      } as OrderItem);
+        total: product.price * item.quantity, // Aqui você adiciona o total calculado
+      } as OrderItemWithTotal);
     }
     return res;
   }
