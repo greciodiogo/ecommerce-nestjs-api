@@ -157,6 +157,12 @@ export class ProductsService {
       }
     }
 
+        // Se purchasePrice foi atualizado, recalcula o price com 10%
+    if (productData.purchasePrice !== undefined) {
+      product.price = productData.purchasePrice * 1.1;
+    }
+
+
     // Validação: price não pode ser menor que price
     const finalPrice = productData.price ?? product.purchasePrice;
     const finalSalesPrice = productData.price ?? product.price;
