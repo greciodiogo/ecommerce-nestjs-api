@@ -28,4 +28,9 @@ export default () => ({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_KEY,
+    bucket: process.env.SUPABASE_BUCKET,
+  },
 });
