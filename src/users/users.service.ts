@@ -40,7 +40,7 @@ export class UsersService {
       user.password = hashedPassword;
       user.firstName = firstName;
       user.lastName = lastName;
-      user.role = role;
+      user.role = role !== undefined ? role : Role.Customer;
       const savedUser = await this.usersRepository.save(user);
       const { password, ...toReturn } = savedUser;
       return toReturn as User;

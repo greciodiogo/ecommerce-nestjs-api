@@ -40,6 +40,7 @@ export class AuthService implements OnModuleInit {
       hashedPassword,
       registerDto.firstName,
       registerDto.lastName,
+      registerDto.role
     );
   }
 
