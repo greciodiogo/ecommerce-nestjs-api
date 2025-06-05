@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Shop } from './models/shop.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -73,14 +73,16 @@ export class ShopsService {
     const savedShop = await this.shopsRepository.save(shop);
 
     const hashedPassword = await argon2.hash(shopData.password);
-    const response = await this.usersService.addUser(
+    const userResponse = await this.usersService.addUser(
       shopData.email,
       hashedPassword,
       shop.shopName,
       '',
       Role.Sales // ou 'sales' dependendo de como defines os enums
     );
-  
+
+    await this.updateShop(savedShop.id, { userId: userResponse.id });
+
     return savedShop;
   }
 
@@ -107,8 +109,20 @@ export class ShopsService {
     if (shopData.products) {
       shop.products = await this.getItems(shop, shopData.products);
     }
-    const { products, ...toAssign } = shopData;
-    Object.assign(shop, toAssign);
+
+    if (shopData.userId) {
+      const user = await this.usersService.getUser(shopData.userId);
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${shopData.userId} not found`);
+      }
+
+      shop.user = user;
+    }
+
+    const { products, userId, ...rest } = shopData;
+    Object.assign(shop, rest);
+
     return this.shopsRepository.save(shop);
   }
 

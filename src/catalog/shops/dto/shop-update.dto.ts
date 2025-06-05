@@ -1,5 +1,5 @@
 import {
-  IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
@@ -35,4 +35,8 @@ export class ShopUpdateDto {
   @IsString()
   @IsOptional()
   address?: string;
+
+  @IsInt()
+  @IsOptional()
+  userId?: number;
 }
