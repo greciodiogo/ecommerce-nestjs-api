@@ -5,8 +5,8 @@ import { Code } from './models/code.entity';
 import { NotFoundError } from '../errors/not-found.error';
 import { ConflictError } from '../errors/conflict.error';
 import { ConfigService } from '@nestjs/config';
-import { MailService } from 'src/mail/mail.service';
 import { CodeUpdateDto } from './dto/code-update.dto';
+import { MailService } from '../mail/mail.service';
 
 
 @Injectable()

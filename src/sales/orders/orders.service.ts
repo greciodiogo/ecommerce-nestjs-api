@@ -16,7 +16,7 @@ import { Role } from '../../users/models/role.enum';
 import { OrderItemDto } from './dto/order-item.dto';
 import { OrderStatus } from './models/order-status.enum';
 import { User } from 'src/users/models/user.entity';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from '../../mail/mail.service';
 import moment from 'moment';
 
 const today = new Date();

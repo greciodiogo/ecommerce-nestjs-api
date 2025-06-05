@@ -3,12 +3,12 @@ import { CodesController } from './codes.controller';
 import { CodesService } from './codes.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Code } from './models/code.entity';
-import { MailService } from 'src/mail/mail.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Code])],
+  imports: [TypeOrmModule.forFeature([Code]), MailModule],
   controllers: [CodesController],
-  providers: [CodesService, MailService],
-  exports: [CodesService, MailService],
+  providers: [CodesService],
+  exports: [CodesService],
 })
 export class CodesModule {}

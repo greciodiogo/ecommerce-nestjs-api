@@ -3,6 +3,7 @@ import * as Joi from 'joi';
 export const schema = Joi.object({
   PORT: Joi.number().default(3000),
   POSTGRES_HOST: Joi.string().default('postgres'),
+  // POSTGRES_PORT: Joi.number().default(17780),
   POSTGRES_PORT: Joi.number().default(5432),
   POSTGRES_USER: Joi.string().default('postgres'),
   POSTGRES_PASSWORD: Joi.string().default('postgres'),
