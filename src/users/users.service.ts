@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, Not, Repository } from 'typeorm';
 import { User } from './models/user.entity';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { NotFoundError } from '../errors/not-found.error';
@@ -75,15 +75,23 @@ export class UsersService {
     });
   }
 
-  async getUsers(): Promise<User[]> {
-    return await this.usersRepository.find();
+  async getUsers(roleFilter?: 'customers' | 'sales' | 'exclude-customers'): Promise<User[]> {
+  const where: any = {};
+
+  if (roleFilter === 'customers') {
+    where.role = Role.Customer;
+  } else if (roleFilter === 'sales') {
+    where.role = Role.Sales;
+  } else if (roleFilter === 'exclude-customers') {
+    where.role = Not(Role.Customer);
   }
 
-  async getCustomers(): Promise<User[]> {
-    return await this.usersRepository.find({
-      where: { role: Role.Customer }, // <--- Aqui o filtro
-    });
-  }
+  return await this.usersRepository.find({
+    where,
+    order: { id: 'DESC' },
+  });
+}
+
 
   async getUser(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });

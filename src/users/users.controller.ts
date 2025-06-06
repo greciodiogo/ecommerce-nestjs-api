@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -46,20 +47,9 @@ export class UsersController {
     description: 'List of all users',
   })
   // @ApiForbiddenResponse({ description: 'User is not admin' })
-  async getUsers(): Promise<User[]> {
-    return this.usersService.getUsers();
-  }
-
-  @Get('/customers')
-  // @Roles(Role.Admin)
-  @ApiOkResponse({
-    type: [User],
-    description: 'List of all customers',
-  })
-  // @ApiForbiddenResponse({ description: 'User is not admin' })
-  async getCustomers(): Promise<User[]> {
-    return this.usersService.getCustomers();
-  }
+    getUsers(@Query('role') role: 'customers' | 'sales' | 'exclude-customers'): Promise<User[]> {
+      return this.usersService.getUsers(role);
+    }
 
   @Get('/:id')
   // @Roles(Role.Admin)
