@@ -189,7 +189,13 @@ export class OrdersService {
       return acc + item.price * item.quantity;
     }, 0);
 
-    const savedOrder = await this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
+    let savedOrder = await this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
+
+      const orderNumber = this.generateOrderNumber(savedOrder);
+      savedOrder.order_number = orderNumber;
+
+      // 3. Segundo save (agora com order_number)
+      savedOrder = await this.ordersRepository.save(savedOrder);
 
     const orderForEmail = {
       ...savedOrder,
@@ -255,5 +261,11 @@ export class OrdersService {
     await this.getOrder(id);
     await this.ordersRepository.delete({ id });
     return;
+  }
+
+  generateOrderNumber(order: Order): string {
+    const year = new Date(order.created).getFullYear();
+    const paddedId = order.id.toString().padStart(6, '0');
+    return `Enc${year}/${paddedId}`;
   }
 }

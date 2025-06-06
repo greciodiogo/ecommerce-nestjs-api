@@ -27,6 +27,9 @@ export class Order {
   @UpdateDateColumn()
   updated: Date;
 
+  @Column({ nullable: true, unique: true })
+  order_number?: string;
+
   @ManyToOne(() => User, {
     nullable: true,
     onDelete: 'SET NULL',
