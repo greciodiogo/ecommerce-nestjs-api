@@ -31,7 +31,7 @@ export class ProductsService {
     private readonly shopsService: ShopsService,
   ) { }
 
-  async getProducts(user?: User, withHidden?: boolean): Promise<Product[]> {
+  async getProducts(user?: User, onlyVisible?: boolean): Promise<Product[]> {
     let shopIds: number[] = [];
 
     if (user) {
@@ -42,8 +42,9 @@ export class ProductsService {
       shopIds = shops.map((shop) => shop.id);
     }
     const whereCondition: any = {};
-  
-    if (!withHidden) {
+
+      // ✅ Aplica o filtro só se foi explicitamente solicitado
+    if (onlyVisible || onlyVisible === undefined) {
       whereCondition.visible = true;
     }
   

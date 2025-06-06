@@ -25,6 +25,7 @@ import {
   // ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   // ApiUnauthorizedResponse,
@@ -39,12 +40,13 @@ export class ProductsController {
 
   @Get()
   @ApiOkResponse({ type: [Product], description: 'List of all products' })
-  getProducts(@ReqUser() user?: User): Promise<Product[]> {
-    const isPrivileged =
-      user && [Role.Admin, Role.Manager, Role.Sales].includes(user.role);
-  
-    // Passa o usuário e a flag de mostrar produtos ocultos
-    return this.productsService.getProducts(user, isPrivileged);
+  @ApiQuery({ name: 'withVisible', required: false, type: Boolean })
+  getProducts(
+    @ReqUser() user?: User,
+    @Query('withVisible') withVisible?: string,
+  ): Promise<Product[]> {
+    const onlyVisible = withVisible === 'true'; // ✅ true só quando explicitamente 'true'
+    return this.productsService.getProducts(user, onlyVisible);
   }
 
   @Get('/:id')
