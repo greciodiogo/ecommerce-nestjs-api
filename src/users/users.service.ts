@@ -79,6 +79,12 @@ export class UsersService {
     return await this.usersRepository.find();
   }
 
+  async getCustomers(): Promise<User[]> {
+    return await this.usersRepository.find({
+      where: { role: Role.Customer }, // <--- Aqui o filtro
+    });
+  }
+
   async getUser(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {

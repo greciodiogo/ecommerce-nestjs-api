@@ -50,6 +50,17 @@ export class UsersController {
     return this.usersService.getUsers();
   }
 
+  @Get('/customers')
+  // @Roles(Role.Admin)
+  @ApiOkResponse({
+    type: [User],
+    description: 'List of all customers',
+  })
+  // @ApiForbiddenResponse({ description: 'User is not admin' })
+  async getCustomers(): Promise<User[]> {
+    return this.usersService.getCustomers();
+  }
+
   @Get('/:id')
   // @Roles(Role.Admin)
   @ApiOkResponse({
