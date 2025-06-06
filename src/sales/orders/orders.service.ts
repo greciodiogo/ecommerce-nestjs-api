@@ -188,6 +188,7 @@ export class OrdersService {
     const total = order.items.reduce((acc, item) => {
       return acc + item.price * item.quantity;
     }, 0);
+    const roundedTotal = Math.round(total * 100) / 100;
 
     let savedOrder = await this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
 
@@ -199,7 +200,7 @@ export class OrdersService {
 
     const orderForEmail = {
       ...savedOrder,
-      total,
+      roundedTotal,
       createdFormatted: moment(savedOrder.created).format('DD/MM/YYYY [às] HH:mm'),
     };
 
