@@ -27,6 +27,7 @@ import { ImportExportModule } from './import-export/import-export.module';
 import { PagesModule } from './pages/pages.module';
 import { CartsModule } from './carts/carts.module';
 import { DashboardModule } from './utilitarios/dashboard/dashboard.module';
+import { NotificationsModule } from './notifications/notification.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { DashboardModule } from './utilitarios/dashboard/dashboard.module';
     ImportExportModule,
     PagesModule,
     CartsModule,
+    NotificationsModule
   ],
   controllers: [],
   providers: [

@@ -54,6 +54,17 @@ export class UsersService {
       where: { email },
     });
   }
+  async findUsersByRole(role: Role): Promise<Array<User> | null> {
+    return await this.usersRepository.find({
+      where: { role },
+    });
+  }
+
+  async findUserByRole(role: Role): Promise<User | null> {
+    return await this.usersRepository.findOne({
+      where: { role },
+    });
+  }
 
   async findUserToLogin(email: string): Promise<User | null> {
     return await this.usersRepository.findOne({
