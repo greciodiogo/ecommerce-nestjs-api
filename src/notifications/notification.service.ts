@@ -9,14 +9,14 @@ import { UsersService } from 'src/users/users.service';
 import { Notification } from './models/notification.entity';
 import { NotifyUsersByRoleDto } from './dto/notify-users-role.dto';
 import { NotFoundError } from 'src/errors/not-found.error';
+import { NotificationsGateway } from 'src/notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationsRepository: Repository<Notification>,
-
-
+    private readonly gateway: NotificationsGateway,
     private readonly usersService: UsersService,
 
   ) { }
@@ -71,7 +71,9 @@ export class NotificationsService {
 
     notification.user = user;
 
-    return this.notificationsRepository.save(notification);
+    const savedNotification = this.notificationsRepository.save(notification);
+    this.gateway.sendNotificationToUser(user.id, savedNotification)
+    return savedNotification
   }
 
   async notifyUsersByRole(notifyUser: NotifyUsersByRoleDto): Promise<Notification[]> {
