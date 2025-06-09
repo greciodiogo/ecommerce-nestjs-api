@@ -14,6 +14,8 @@ import { PaymentMethodsModule } from '../payment-methods/payment-methods.module'
 import { OrdersExporter } from './orders.exporter';
 import { OrdersImporter } from './orders.importer';
 import { MailModule } from '../../mail/mail.module';
+import { NotificationsService } from 'src/notifications/notification.service';
+import { NotificationsModule } from 'src/notifications/notification.module';
 
 @Module({
   imports: [
@@ -22,7 +24,8 @@ import { MailModule } from '../../mail/mail.module';
     CatalogModule,
     DeliveryMethodsModule,
     PaymentMethodsModule,
-    MailModule
+    MailModule,
+    NotificationsModule
   ],
   providers: [OrdersService, OrdersSubscriber, OrdersExporter, OrdersImporter],
   controllers: [OrdersController],

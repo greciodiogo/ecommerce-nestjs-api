@@ -18,6 +18,7 @@ import { OrderStatus } from './models/order-status.enum';
 import { User } from 'src/users/models/user.entity';
 import { MailService } from '../../mail/mail.service';
 import moment from 'moment';
+import { NotificationsService } from 'src/notifications/notification.service';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -46,6 +47,7 @@ export class OrdersService {
     private readonly mailService: MailService,
     private readonly deliveryMethodsService: DeliveryMethodsService,
     private readonly paymentMethodsService: PaymentMethodsService,
+    private readonly notificationsService: NotificationsService,
   ) { }
 
   async getOrders(withUser = false, withProducts = false): Promise<Order[]> {
@@ -192,11 +194,11 @@ export class OrdersService {
 
     let savedOrder = await this.ordersRepository.save(order, { listeners: !ignoreSubscribers });
 
-      const orderNumber = this.generateOrderNumber(savedOrder);
-      savedOrder.order_number = orderNumber;
+    const orderNumber = this.generateOrderNumber(savedOrder);
+    savedOrder.order_number = orderNumber;
 
-      // 3. Segundo save (agora com order_number)
-      savedOrder = await this.ordersRepository.save(savedOrder);
+    // 3. Segundo save (agora com order_number)
+    savedOrder = await this.ordersRepository.save(savedOrder);
 
     const orderForEmail = {
       ...savedOrder,
@@ -207,9 +209,29 @@ export class OrdersService {
     // Envia o email com os dados formatados
     if (savedOrder) {
       await this.mailService.sendOrderInvoiceEmail(orderData.contactEmail, orderForEmail);
+      await this.notifySystemAdmin([Role.Admin, Role.Manager], savedOrder)
+      await this.notifyShopkeepersOnOrder(savedOrder)
     }
 
     return savedOrder;
+  }
+
+  public notifySystemAdmin(roles: Array<Role>, order: Order) {
+    roles.forEach((role) => {
+      this.notificationsService.notifyUsersByRole({
+        title: 'new order was placed #' + order.order_number,
+        message: 'new order was placed #' + order.order_number,
+        role: role,
+      })
+    })
+  }
+
+  public notifyShopkeeper(order: Order) {
+    this.notificationsService.notifyUsersByRole({
+      title: 'product add to order' + order.order_number,
+      message: 'product add to order' + order.order_number,
+      role: Role.Sales,
+    })
   }
 
   private async getItems(order: Order, items: OrderItemDto[]) {
