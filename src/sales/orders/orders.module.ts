@@ -16,11 +16,13 @@ import { OrdersImporter } from './orders.importer';
 import { MailModule } from '../../mail/mail.module';
 import { NotificationsService } from 'src/notifications/notification.service';
 import { NotificationsModule } from 'src/notifications/notification.module';
+import { ShopsModule } from 'src/catalog/shops/shops.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem, OrderDelivery, OrderPayment]),
     UsersModule,
+    ShopsModule,
     CatalogModule,
     DeliveryMethodsModule,
     PaymentMethodsModule,

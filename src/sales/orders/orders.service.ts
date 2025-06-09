@@ -19,6 +19,7 @@ import { User } from 'src/users/models/user.entity';
 import { MailService } from '../../mail/mail.service';
 import moment from 'moment';
 import { NotificationsService } from 'src/notifications/notification.service';
+import { Shop } from 'src/catalog/shops/models/shop.entity';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -42,6 +43,8 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+    @InjectRepository(Shop)
+    private readonly shopsRepository: Repository<Shop>,
     private readonly usersService: UsersService,
     private readonly productsService: ProductsService,
     private readonly mailService: MailService,
@@ -226,12 +229,36 @@ export class OrdersService {
     })
   }
 
-  public notifyShopkeeper(order: Order) {
-    this.notificationsService.notifyUsersByRole({
-      title: 'product add to order' + order.order_number,
-      message: 'product add to order' + order.order_number,
-      role: Role.Sales,
-    })
+  async notifyShopkeepersOnOrder(order: any): Promise<any> {
+    const uniqueShopkeepers = new Map<number, { userId: number; productIds: number[] }>();
+
+    for (const item of order.items) {
+
+      const product_ = await this.productsService.getProduct(item.productId);
+
+      const shop = await this.shopsRepository.findOne({
+        where: { id: product_.shopId },
+        relations: ['user'],
+      });
+
+      if (!shop || !shop.user) continue;
+
+      if (!uniqueShopkeepers.has(shop.user.id)) {
+        uniqueShopkeepers.set(shop.user.id, {
+          userId: shop.user.id,
+          productIds: [],
+        });
+      }
+
+      uniqueShopkeepers.get(shop.user.id)?.productIds.push(product_.id);
+    }
+    for (const shopkeeper of uniqueShopkeepers.values()) {
+      await this.notificationsService.createNotification({
+        title: `New Order #${order.order_number}, Products: ${shopkeeper.productIds.join(', ')}`,
+        message: `Products: ${shopkeeper.productIds.join(', ')} added to order.`,
+        userId: shopkeeper.userId,
+      });
+    }
   }
 
   private async getItems(order: Order, items: OrderItemDto[]) {
