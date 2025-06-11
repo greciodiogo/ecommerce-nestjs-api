@@ -43,6 +43,16 @@ export class OrdersController {
     return await this.ordersService.createOrder(user?.id ?? null, body);
   }
 
+  @Post('/notifyShopkeepersOnOrder')
+  // @ApiCreatedResponse({ type: Order, description: 'Order created' })
+  @ApiBadRequestResponse({ description: 'Invalid order data' })
+  @ApiNotFoundResponse({ description: 'Product not found' })
+  async notifyShopkeepersOnOrder(
+    @Body() body: any,
+  ): Promise<Order> {
+    return await this.ordersService.notifyShopkeepersOnOrder(body);
+  }
+
   @Get('/sales')
   // @Roles(Role.Admin, Role.Manager, Role.Sales)
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
