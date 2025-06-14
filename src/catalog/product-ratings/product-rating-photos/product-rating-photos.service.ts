@@ -5,6 +5,7 @@ import { ProductRatingPhoto } from './models/product-rating-photo.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LocalFilesService } from '../../../local-files/local-files.service';
+import { FileDTO } from 'src/local-files/upload.dto';
 
 @Injectable()
 export class ProductRatingPhotosService {
@@ -23,34 +24,34 @@ export class ProductRatingPhotosService {
     return !!productRating;
   }
 
-  async getProductRatingPhoto(
-    productId: number,
-    productRatingId: number,
-    photoId: number,
-    thumbnail: boolean,
-  ): Promise<StreamableFile> {
-    const ratingPhoto = await this.productRatingPhotosRepository.findOne({
-      where: {
-        id: photoId,
-        productRating: { id: productRatingId, product: { id: productId } },
-      },
-    });
+  // async getProductRatingPhoto(
+  //   productId: number,
+  //   productRatingId: number,
+  //   photoId: number,
+  //   thumbnail: boolean,
+  // ): Promise<StreamableFile> {
+  //   const ratingPhoto = await this.productRatingPhotosRepository.findOne({
+  //     where: {
+  //       id: photoId,
+  //       productRating: { id: productRatingId, product: { id: productId } },
+  //     },
+  //   });
 
-    if (!ratingPhoto) {
-      throw new NotFoundError('product rating photo', 'id', photoId.toString());
-    }
+  //   if (!ratingPhoto) {
+  //     throw new NotFoundError('product rating photo', 'id', photoId.toString());
+  //   }
 
-    const photoPath = thumbnail ? ratingPhoto.thumbnailPath : ratingPhoto.path;
+  //   const photoPath = thumbnail ? ratingPhoto.thumbnailPath : ratingPhoto.path;
 
-    const mimeType = thumbnail ? 'image/jpeg' : ratingPhoto.mimeType;
+  //   const mimeType = thumbnail ? 'image/jpeg' : ratingPhoto.mimeType;
 
-    return await this.localFilesService.getPhoto(photoPath, mimeType);
-  }
+  //   return await this.localFilesService.getPhoto(photoPath);
+  // }
 
   async addProductRatingPhoto(
     productId: number,
     productRatingId: number,
-    file: Express.Multer.File,
+    file: FileDTO,
   ): Promise<ProductRating> {
     const productRating = await this.productRatingsRepository.findOne({
       where: { id: productRatingId, product: { id: productId } },
@@ -67,10 +68,10 @@ export class ProductRatingPhotosService {
     photo.path = path;
     photo.mimeType = mimeType;
     photo.thumbnailPath = await this.localFilesService.createPhotoThumbnail(
-      file.path,
+      file
     );
     photo.placeholderBase64 =
-      await this.localFilesService.createPhotoPlaceholder(file.path);
+      await this.localFilesService.createPhotoPlaceholder(file);
     productRating.photos.push(photo);
     return this.productRatingsRepository.save(productRating);
   }

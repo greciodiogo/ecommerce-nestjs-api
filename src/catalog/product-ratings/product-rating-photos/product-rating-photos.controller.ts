@@ -36,6 +36,7 @@ import { ProductRating } from '../models/product-rating.entity';
 import { Features } from '../../../settings/guards/features.decorator';
 import { fileResponseSchema } from '../../../local-files/models/file-response.schema';
 import { fileBodySchema } from '../../../local-files/models/file-body.schema';
+import { FileDTO } from 'src/local-files/upload.dto';
 
 @ApiTags('product ratings')
 @Features('Product ratings', 'Product rating photos')
@@ -43,26 +44,26 @@ import { fileBodySchema } from '../../../local-files/models/file-body.schema';
 export class ProductRatingPhotosController {
   constructor(private productRatingPhotosService: ProductRatingPhotosService) {}
 
-  @Get(':photoId')
-  @ApiOkResponse({
-    schema: fileResponseSchema,
-    description: 'Product rating photo with given id',
-  })
-  @ApiProduces('image/*')
-  @ApiNotFoundResponse({ description: 'Product rating photo not found' })
-  async getProductRatingPhoto(
-    @Param('productId', ParseIntPipe) productId: number,
-    @Param('id', ParseIntPipe) id: number,
-    @Param('photoId', ParseIntPipe) photoId: number,
-    @Query('thumbnail', ParseBoolPipe) thumbnail: boolean,
-  ): Promise<StreamableFile> {
-    return await this.productRatingPhotosService.getProductRatingPhoto(
-      productId,
-      id,
-      photoId,
-      thumbnail,
-    );
-  }
+  // @Get(':photoId')
+  // @ApiOkResponse({
+  //   schema: fileResponseSchema,
+  //   description: 'Product rating photo with given id',
+  // })
+  // @ApiProduces('image/*')
+  // @ApiNotFoundResponse({ description: 'Product rating photo not found' })
+  // async getProductRatingPhoto(
+  //   @Param('productId', ParseIntPipe) productId: number,
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Param('photoId', ParseIntPipe) photoId: number,
+  //   @Query('thumbnail', ParseBoolPipe) thumbnail: boolean,
+  // ): Promise<StreamableFile> {
+  //   return await this.productRatingPhotosService.getProductRatingPhoto(
+  //     productId,
+  //     id,
+  //     photoId,
+  //     thumbnail,
+  //   );
+  // }
 
   @Post('')
   @Roles(Role.Admin, Role.Manager, Role.Sales, Role.Customer)
@@ -88,7 +89,7 @@ export class ProductRatingPhotosController {
         ],
       }),
     )
-    file: Express.Multer.File,
+    file: FileDTO,
   ): Promise<ProductRating> {
     const checkUser =
       await this.productRatingPhotosService.checkProductRatingUser(id, user.id);

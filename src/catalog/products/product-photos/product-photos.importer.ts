@@ -23,7 +23,7 @@ export class ProductPhotosImporter implements Importer {
     for (const productPhoto of parsedProductPhotos) {
       const { id: newId } = await this.productPhotosService.createProductPhoto(
         productPhoto.product.id,
-        productPhoto.path,
+        null,
         productPhoto.mimeType,
       );
       idMap[productPhoto.id] = newId;

@@ -3,15 +3,17 @@ import Sharp from 'sharp';
 import { SettingsService } from '../settings/settings.service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Readable } from 'stream';
+import { FileDTO } from './upload.dto';
 
 @Injectable()
-export class SupabaseStorageService {
+export class LocalFilesService {
   private supabase: SupabaseClient;
 
   constructor(private settingsService: SettingsService) {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_KEY,
+ this.supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_KEY!,
+      { auth: { persistSession: false } }
     );
   }
 
@@ -19,90 +21,91 @@ export class SupabaseStorageService {
     return process.env.SUPABASE_BUCKET ?? 'uploads';
   }
 
-  async getPhoto(path: string): Promise<StreamableFile> {
-    const { data, error } = await this.supabase
-      .storage
+ async getPhoto(path: string): Promise<Blob | null> {
+    const { data, error } = await this.supabase.storage
       .from(this.getBucket())
       .download(path);
 
-    if (error || !data) throw new Error('Image not found in Supabase');
+      console.log(data)
 
-    return new StreamableFile(data);
-  }
-
-  async savePhoto(file: Express.Multer.File): Promise<{ path: string; mimeType: string }> {
-    const convertToJpeg = (await this.settingsService.getSettingValueByName(
-      'Convert images to JPEG',
-    )) === 'true';
-
-    let buffer = file.buffer ?? (await Sharp(file.path).toBuffer());
-    let mimetype = file.mimetype;
-    let extension = file.originalname.split('.').pop();
-
-    if (convertToJpeg) {
-      buffer = await Sharp(buffer)
-        .flatten({ background: '#ffffff' })
-        .jpeg({ quality: 95, mozjpeg: true })
-        .toBuffer();
-      mimetype = 'image/jpeg';
-      extension = 'jpg';
+    if (error || !data) {
+      console.error('Failed to download file:', error?.message);
+      return null;
     }
 
-    const filePath = `originals/${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}.${extension}`;
+    return data;
+  }
 
-    const { error } = await this.supabase
-      .storage
+async savePhoto(file: FileDTO): Promise<{ path: string; mimeType: string }> {
+  const extension = file.originalname.split('.').pop();
+  const safeName = file.originalname
+    .replace(/\.[^/.]+$/, '')
+    .replace(/\s+/g, '-');
+  const filePath = `uploads/${Date.now()}-${safeName}.${extension}`;
+
+  const uint8Array = new Uint8Array(file.buffer); // <- CONVERSÃO IMPORTANTE
+
+  const { error } = await this.supabase.storage
+    .from(this.getBucket())
+    .upload(filePath, uint8Array, {
+      contentType: file.mimetype,
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  return { path: filePath, mimeType: file.mimetype };
+}
+
+
+  async createPhotoThumbnail(file: FileDTO): Promise<string> {
+    const extension = file.originalname.split('.').pop();
+    const safeName = file.originalname.replace(/\.[^/.]+$/, '').replace(/\s+/g, '-');
+    const filePath = `uploads/${Date.now()}-${safeName}.${extension}`;
+
+  const uint8Array = new Uint8Array(file.buffer); // <- CONVERSÃO IMPORTANTE
+
+    const { error } = await this.supabase.storage
       .from(this.getBucket())
-      .upload(filePath, buffer, {
-        contentType: mimetype,
+    .upload(filePath, uint8Array, {
+      contentType: file.mimetype,
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+    if (error) {
+      throw new Error(`Thumbnail upload failed: ${error.message}`);
+    }
+
+    return filePath;
+  }
+
+  async createPhotoPlaceholder(file: FileDTO): Promise<string> {
+      const SUPABASE_URL="https://vpqmfnykuikqgdtihwms.supabase.co"
+      const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcW1mbnlrdWlrcWdkdGlod21zIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODg3MDcxNCwiZXhwIjoyMDY0NDQ2NzE0fQ.J9od2wyAFOddI_33YbWuxmTV-YWqO5wq3dU7eaY7D7s"
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          persistSession: false,
+        },
       });
 
-    if (error) throw error;
-
-    return { path: filePath, mimeType: mimetype };
-  }
-
-  async createPhotoThumbnail(originalPath: string): Promise<string> {
-    const size = Math.abs(
-      parseInt(await this.settingsService.getSettingValueByName('Thumbnail size')),
-    );
-
-    const { data: originalStream, error } = await this.supabase
+      
+    let extension = file.originalname.split('.').pop();
+    const filePath = `originals/${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}.${extension}`;
+      const { data, error } = await supabase
       .storage
-      .from(this.getBucket())
-      .download(originalPath);
-
-    if (error || !originalStream) throw error;
-
-    const buffer = await Sharp(await originalStream.arrayBuffer())
-      .resize(size, size, { fit: 'contain', background: '#ffffff' })
-      .jpeg({ quality: 80, mozjpeg: true })
-      .toBuffer();
-
-    const thumbnailPath = originalPath.replace('originals/', 'thumbnails/');
-
-    const { error: uploadError } = await this.supabase
-      .storage
-      .from(this.getBucket())
-      .upload(thumbnailPath, buffer, { contentType: 'image/jpeg', upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    return thumbnailPath;
-  }
-
-  async createPhotoPlaceholder(originalPath: string): Promise<string> {
-    const { data, error } = await this.supabase
-      .storage
-      .from(this.getBucket())
-      .download(originalPath);
-
+      .from('uploads')
+      .download(filePath);
+      
     if (error || !data) throw error;
 
-    const buffer = await Sharp(await data.arrayBuffer())
-      .resize(12, 12, { fit: 'contain', background: '#ffffff' })
-      .toBuffer();
+    const buffer = file.buffer;
 
     return `data:image/png;base64,${buffer.toString('base64')}`;
   }
+
 }

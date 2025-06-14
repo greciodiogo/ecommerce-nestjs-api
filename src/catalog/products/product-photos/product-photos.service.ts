@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { LocalFilesService } from '../../../local-files/local-files.service';
 import { NotFoundError } from '../../../errors/not-found.error';
 import { Product } from '../models/product.entity';
+import { FileDTO } from 'src/local-files/upload.dto';
 
 @Injectable()
 export class ProductPhotosService {
@@ -21,25 +22,33 @@ export class ProductPhotosService {
     });
   }
 
-  async getProductPhoto(
+ async getProductPhoto(
     productId: number,
     photoId: number,
     thumbnail: boolean,
-  ): Promise<StreamableFile> {
+  ) {
     const productPhoto = await this.productPhotosRepository.findOne({
       where: { id: photoId, product: { id: productId } },
     });
+
     if (!productPhoto) {
       throw new NotFoundError('product photo', 'id', photoId.toString());
     }
-    const filepath = thumbnail ? productPhoto.thumbnailPath : productPhoto.path;
-    const mimeType = thumbnail ? 'image/jpeg' : productPhoto.mimeType;
-    return await this.localFilesService.getPhoto(filepath, mimeType);
+
+    const path = thumbnail ? productPhoto.thumbnailPath : productPhoto.path;
+    const mimeType = productPhoto.mimeType;
+
+    const file = await this.localFilesService.getPhoto(path);
+    if (!file) {
+      throw new NotFoundError('product photo', 'file', path);
+    }
+
+    return await file;
   }
 
   async createProductPhoto(
     id: number,
-    path: string,
+    file: FileDTO,
     mimeType: string,
   ): Promise<ProductPhoto> {
     const product = await this.productsRepository.findOne({ where: { id } });
@@ -47,13 +56,16 @@ export class ProductPhotosService {
       throw new NotFoundError('product', 'id', id.toString());
     }
     const photo = new ProductPhoto();
-    photo.path = path;
+    
+    let extension = file.originalname.split('.').pop();
+    const filePath = `originals/${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}.${extension}`;
+    photo.path = filePath;
     photo.mimeType = mimeType;
     photo.thumbnailPath = await this.localFilesService.createPhotoThumbnail(
-      photo.path,
+      file,
     );
     photo.placeholderBase64 =
-      await this.localFilesService.createPhotoPlaceholder(photo.path);
+      await this.localFilesService.createPhotoPlaceholder(file);
     product.photos.push(photo);
     await this.productsRepository.save(product);
     if (product.photosOrder) {
@@ -67,32 +79,26 @@ export class ProductPhotosService {
     return photo;
   }
 
-  async addProductPhoto(
-    id: number,
-    file: Express.Multer.File,
-  ): Promise<Product> {
-    const product = await this.productsRepository.findOne({ where: { id } });
+  async addProductPhoto(id: number, file: FileDTO): Promise<Product> {
+    const product = await this.productsRepository.findOne({ where: { id }, relations: ['photos'] });
     if (!product) {
       throw new NotFoundError('product', 'id', id.toString());
     }
+
     const photo = new ProductPhoto();
     const { path, mimeType } = await this.localFilesService.savePhoto(file);
     photo.path = path;
     photo.mimeType = mimeType;
-    photo.thumbnailPath = await this.localFilesService.createPhotoThumbnail(
-      file.path,
-    );
-    photo.placeholderBase64 =
-      await this.localFilesService.createPhotoPlaceholder(file.path);
+    photo.thumbnailPath = await this.localFilesService.createPhotoThumbnail(file);
+
     product.photos.push(photo);
+
     await this.productsRepository.save(product);
-    if (product.photosOrder) {
-      product.photosOrder = [...product.photosOrder.split(','), photo.id].join(
-        ',',
-      );
-    } else {
-      product.photosOrder = photo.id?.toString();
-    }
+
+    product.photosOrder = product.photosOrder
+      ? [...product.photosOrder.split(','), photo.id].join(',')
+      : photo.id.toString();
+
     return this.productsRepository.save(product);
   }
 
