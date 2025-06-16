@@ -5,15 +5,16 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Readable } from 'stream';
 import { FileDTO } from './upload.dto';
 import sharp from 'sharp';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LocalFilesService {
   private supabase: SupabaseClient;
 
-  constructor(private settingsService: SettingsService) {
+  constructor(private settingsService: SettingsService, private readonly configService: ConfigService) {
     this.supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_KEY!,
+      this.configService.get<string>('supabase.url')!,
+      this.configService.get<string>('supabase.key')!,
       { auth: { persistSession: false } }
     );
   }
@@ -95,19 +96,9 @@ export class LocalFilesService {
 
 
   async createPhotoPlaceholder(file: FileDTO): Promise<string> {
-    const SUPABASE_URL = "https://vpqmfnykuikqgdtihwms.supabase.co"
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcW1mbnlrdWlrcWdkdGlod21zIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODg3MDcxNCwiZXhwIjoyMDY0NDQ2NzE0fQ.J9od2wyAFOddI_33YbWuxmTV-YWqO5wq3dU7eaY7D7s"
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: false,
-      },
-    });
-
-
     let extension = file.originalname.split('.').pop();
     const filePath = `originals/${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}.${extension}`;
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .storage
       .from('uploads')
       .download(filePath);
