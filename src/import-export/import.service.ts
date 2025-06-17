@@ -20,6 +20,7 @@ import { ReturnsImporter } from '../sales/returns/returns.importer';
 import { ProductPhotosImporter } from '../catalog/products/product-photos/product-photos.importer';
 import { PagesImporter } from '../pages/pages.importer';
 import { ImportStatus } from './models/import-status.interface';
+import { PromotionsImporter } from 'src/catalog/promotions/promotions.importer';
 
 @Injectable()
 export class ImportService {
@@ -36,6 +37,7 @@ export class ImportService {
     [DataType.PaymentMethods]: this.paymentMethodsImporter,
     [DataType.Orders]: this.ordersImporter,
     [DataType.Returns]: this.returnsImporter,
+    [DataType.Promotions]: this.promotionsImporter,
   };
   private idMaps: Record<string, IdMap> = {};
 
@@ -54,6 +56,7 @@ export class ImportService {
     private paymentMethodsImporter: PaymentMethodsImporter,
     private ordersImporter: OrdersImporter,
     private returnsImporter: ReturnsImporter,
+    private promotionsImporter: PromotionsImporter,
   ) {}
 
   async import(

@@ -11,4 +11,5 @@ export enum DataType {
   PaymentMethods = 'paymentMethods',
   Orders = 'orders',
   Returns = 'returns',
+  Promotions = 'promotions',
 }

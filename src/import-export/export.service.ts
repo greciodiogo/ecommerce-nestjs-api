@@ -18,6 +18,7 @@ import { ReturnsExporter } from '../sales/returns/returns.exporter';
 import { ProductPhotosExporter } from '../catalog/products/product-photos/product-photos.exporter';
 import { PagesExporter } from '../pages/pages.exporter';
 import { ExcelSerializer } from './excel-serializer.service';
+import { PromotionsExporter } from 'src/catalog/promotions/promotions.exporter';
 
 @Injectable()
 export class ExportService {
@@ -34,6 +35,7 @@ export class ExportService {
     [DataType.PaymentMethods]: this.paymentMethodsExporter,
     [DataType.Orders]: this.ordersExporter,
     [DataType.Returns]: this.returnsExporter,
+    [DataType.Promotions]: this.promotionsExporter,
   };
 
   constructor(
@@ -52,6 +54,7 @@ export class ExportService {
     private paymentMethodsExporter: PaymentMethodsExporter,
     private ordersExporter: OrdersExporter,
     private returnsExporter: ReturnsExporter,
+    private promotionsExporter: PromotionsExporter,
   ) {}
 
   getFilename(format: 'json' | 'csv' | 'xlsx') {

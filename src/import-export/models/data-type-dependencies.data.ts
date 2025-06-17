@@ -21,6 +21,7 @@ const dataTypeDependencies: [DataType, DataType[]][] = [
     ],
   ],
   [DataType.Returns, [DataType.Orders]],
+  [DataType.Promotions, [DataType.Categories]],
 ];
 
 export { dataTypeDependencies };
