@@ -28,6 +28,7 @@ import { PagesModule } from './pages/pages.module';
 import { CartsModule } from './carts/carts.module';
 import { DashboardModule } from './utilitarios/dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notification.module';
+import { AddressModule } from './address/address.module';
 
 @Module({
   imports: [
@@ -66,7 +67,8 @@ import { NotificationsModule } from './notifications/notification.module';
     ImportExportModule,
     PagesModule,
     CartsModule,
-    NotificationsModule
+    NotificationsModule,
+    AddressModule,
   ],
   controllers: [],
   providers: [
