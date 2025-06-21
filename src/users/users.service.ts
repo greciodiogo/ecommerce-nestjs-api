@@ -8,18 +8,6 @@ import { ConflictError } from '../errors/conflict.error';
 import { Role } from './models/role.enum';
 // import { endOfWeek, startOfWeek } from 'src/sales/orders/orders.service';
 
-const today = new Date();
-const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
-const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-export const startOfWeek = new Date(today);
-startOfWeek.setDate(today.getDate() - diffToMonday);
-startOfWeek.setHours(0, 0, 0, 0);
-
-export const endOfWeek = new Date(startOfWeek);
-endOfWeek.setDate(startOfWeek.getDate() + 6);
-endOfWeek.setHours(23, 59, 59, 999);
-
 
 @Injectable()
 export class UsersService {
@@ -133,12 +121,45 @@ export class UsersService {
     return true;
   }
 
-  async getNewUsersCount(weekly: boolean = false): Promise<number> {
-    let where: any = {};
+  async getNewUsersCount(
+    period?: 'weekly' | 'monthly' | 'yearly',
+  ): Promise<number> {
+    const where: any = {};
 
-    if (weekly) {
-      where.registered = Between(startOfWeek, endOfWeek);
+    if (period) {
+      where.registered = this.getDateRange(period);
     }
-      return this.usersRepository.count({where});
+    return this.usersRepository.count({ where });
+  }
+
+  private getDateRange(period: 'weekly' | 'monthly' | 'yearly') {
+    const today = new Date();
+    if (period === 'weekly') {
+      const dayOfWeek = today.getDay();
+      const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - diffToMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      return Between(startOfWeek, endOfWeek);
+    }
+    if (period === 'monthly') {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0,
+      );
+      endOfMonth.setHours(23, 59, 59, 999);
+      return Between(startOfMonth, endOfMonth);
+    }
+    if (period === 'yearly') {
+      const startOfYear = new Date(today.getFullYear(), 0, 1);
+      const endOfYear = new Date(today.getFullYear(), 11, 31);
+      endOfYear.setHours(23, 59, 59, 999);
+      return Between(startOfYear, endOfYear);
+    }
   }
 }

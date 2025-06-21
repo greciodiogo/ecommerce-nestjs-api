@@ -78,7 +78,7 @@ export class OrdersService {
       where.items = {
         product: {
           shop: {
-            name: shopName,
+            shopName: shopName,
           },
         },
       };

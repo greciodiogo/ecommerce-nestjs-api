@@ -49,7 +49,7 @@ export class ProductsService {
       queryBuilder.andWhere('product.name LIKE :name', { name: `%${name}%` });
     }
     if (shopName) {
-      queryBuilder.andWhere('shop.name LIKE :shopName', {
+      queryBuilder.andWhere('shop.shopName LIKE :shopName', {
         shopName: `%${shopName}%`,
       });
     }
