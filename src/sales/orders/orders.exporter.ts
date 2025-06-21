@@ -11,7 +11,7 @@ export class OrdersExporter implements Exporter<Order> {
   constructor(private ordersService: OrdersService) {}
 
   async export(): Promise<Order[]> {
-    const orders = await this.ordersService.getOrders(true, true);
+    const orders = await this.ordersService.getOrders(null, true, true);
     const preparedOrders: Order[] = [];
     for (const order of orders) {
       preparedOrders.push(this.prepareOrder(order));

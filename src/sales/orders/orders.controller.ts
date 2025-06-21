@@ -26,6 +26,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Order } from './models/order.entity';
+import { OrderFilterDto } from './dto/order-filter.dto';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -66,8 +67,8 @@ export class OrdersController {
   // @ApiUnauthorizedResponse({ description: 'User not logged in' })
   // @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ type: [Order], description: 'List of all orders' })
-  async getOrders(): Promise<Order[]> {
-    return this.ordersService.getOrders();
+  async getOrders(@Query() filters: OrderFilterDto): Promise<Order[]> {
+    return this.ordersService.getOrders(filters);
   }
 
   @Get('/my')

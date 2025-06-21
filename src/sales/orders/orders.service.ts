@@ -20,6 +20,7 @@ import { MailService } from '../../mail/mail.service';
 import moment from 'moment';
 import { NotificationsService } from 'src/notifications/notification.service';
 import { Shop } from 'src/catalog/shops/models/shop.entity';
+import { OrderFilterDto } from './dto/order-filter.dto';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -53,11 +54,43 @@ export class OrdersService {
     private readonly notificationsService: NotificationsService,
   ) { }
 
-  async getOrders(withUser = false, withProducts = false): Promise<Order[]> {
+  async getOrders(
+    filters: OrderFilterDto,
+    withUser = false,
+    withProducts = false,
+  ): Promise<Order[]> {
+    const { order_number, date, shopName } = filters;
+    const where: any = {};
+
+    if (order_number) {
+      where.order_number = order_number;
+    }
+
+    if (date) {
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      where.created = Between(startDate, endDate);
+    }
+
+    if (shopName) {
+      where.items = {
+        product: {
+          shop: {
+            name: shopName,
+          },
+        },
+      };
+    }
+
     return this.ordersRepository.find({
+      where,
       relations: [
         ...(withUser ? ['user'] : []),
         'items',
+        'items.product',
+        'items.product.shop',
         ...(withProducts ? ['items.product'] : []),
         'delivery',
         'payment',

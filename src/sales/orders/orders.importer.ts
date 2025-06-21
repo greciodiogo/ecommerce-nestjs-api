@@ -35,7 +35,7 @@ export class OrdersImporter implements Importer {
   }
 
   async clear() {
-    const orders = await this.ordersService.getOrders();
+    const orders = await this.ordersService.getOrders(null);
     let deleted = 0;
     for (const order of orders) {
       await this.ordersService.deleteOrder(order.id);
