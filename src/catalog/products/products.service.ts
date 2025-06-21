@@ -1,7 +1,7 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './models/product.entity';
-import { In, LessThan, Repository } from 'typeorm';
+import { In, LessThan, Repository, FindOptionsWhere, Like } from 'typeorm';
 import { ProductCreateDto } from './dto/product-create.dto';
 import { ProductUpdateDto } from './dto/product-update.dto';
 import { Attribute } from './models/attribute.entity';
@@ -12,6 +12,7 @@ import { AttributeTypesService } from '../attribute-types/attribute-types.servic
 import { Shop } from '../shops/models/shop.entity';
 import { User } from 'src/users/models/user.entity';
 import { ShopsService } from '../shops/shops.service';
+import { ProductFilterDto } from './dto/product-filter.dto';
 
 @Injectable()
 export class ProductsService {
@@ -31,31 +32,44 @@ export class ProductsService {
     private readonly shopsService: ShopsService,
   ) { }
 
-  async getProducts(user?: User, onlyVisible?: boolean): Promise<Product[]> {
-    let shopIds: number[] = [];
+  async getProducts(
+    filters: ProductFilterDto,
+    user?: User,
+    onlyVisible?: boolean,
+  ): Promise<Product[]> {
+    const { id, name, shopName } = filters;
+    const queryBuilder = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.shop', 'shop');
+
+    if (id) {
+      queryBuilder.andWhere('product.id = :id', { id: +id });
+    }
+    if (name) {
+      queryBuilder.andWhere('product.name LIKE :name', { name: `%${name}%` });
+    }
+    if (shopName) {
+      queryBuilder.andWhere('shop.name LIKE :shopName', {
+        shopName: `%${shopName}%`,
+      });
+    }
 
     if (user) {
       const shops = await this.shopsRepository.find({
-        where: { user: { id: user.id } }, // pegando id do objeto User
+        where: { user: { id: user.id } },
         select: ['id'],
       });
-      shopIds = shops.map((shop) => shop.id);
+      const shopIds = shops.map((shop) => shop.id);
+      if (shopIds.length > 0) {
+        queryBuilder.andWhere('product.shopId IN (:...shopIds)', { shopIds });
+      }
     }
-    const whereCondition: any = {};
 
-      // ✅ Aplica o filtro só se foi explicitamente solicitado
     if (onlyVisible || onlyVisible === undefined) {
-      whereCondition.visible = true;
+      queryBuilder.andWhere('product.visible = :visible', { visible: true });
     }
-  
-    if (shopIds.length > 0) {
-      whereCondition.shop = { id: In(shopIds) };
-    }
-  
-    const products = await this.productsRepository.find({
-      where: whereCondition,
-      relations: ['shop'],
-    });
+
+    const products = await queryBuilder.getMany();
 
     // ✅ Se price for nulo, define como price + 10%
     for (const product of products) {

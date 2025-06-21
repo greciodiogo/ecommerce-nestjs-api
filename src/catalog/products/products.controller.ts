@@ -32,6 +32,7 @@ import {
 } from '@nestjs/swagger';
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
+import { ProductFilterDto } from './dto/product-filter.dto';
 
 @ApiTags('products')
 @Controller('products')
@@ -42,11 +43,12 @@ export class ProductsController {
   @ApiOkResponse({ type: [Product], description: 'List of all products' })
   @ApiQuery({ name: 'withVisible', required: false, type: Boolean })
   getProducts(
+    @Query() filters: ProductFilterDto,
     @ReqUser() user?: User,
     @Query('withVisible') withVisible?: string,
   ): Promise<Product[]> {
     const onlyVisible = withVisible === 'true'; // ✅ true só quando explicitamente 'true'
-    return this.productsService.getProducts(user, onlyVisible);
+    return this.productsService.getProducts(filters, user, onlyVisible);
   }
 
   @Get('/:id')
