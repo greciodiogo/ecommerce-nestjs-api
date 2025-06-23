@@ -103,23 +103,28 @@ export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     const session = require('express-session');
     const RedisStore = createRedisStore(session);
+
+    const sessionMiddleware = (req, res, next) => {
+      const isAdmin = req.headers.origin?.includes('admin') || req.headers.referer?.includes('admin') || req.headers.referer?.includes('5000');
+      session({
+        store: new RedisStore({ client: this.redisClient }),
+        secret: this.configService.get<string>('session.secret', ''),
+        resave: false,
+        saveUninitialized: false,
+        name: isAdmin ? 'admin.sid' : 'store.sid',
+        cookie: {
+          httpOnly: true,
+          secure: this.configService.get<string>('nodeEnv') === 'production',
+          sameSite: 'lax',
+          maxAge: this.configService.get<number>('session.maxAge'),
+          path: '/',
+          domain: this.configService.get<string>('session.domain'),
+        },
+      })(req, res, next);
+    };
+
     consumer
-      .apply(
-        session({
-          store: new RedisStore({ client: this.redisClient }),
-          secret: this.configService.get<string>('session.secret', ''),
-          resave: false,
-          saveUninitialized: false,
-          cookie: {
-            httpOnly: true,
-            secure: false, // true se estiver usando HTTPS
-            sameSite: 'lax', // ou 'none' se for HTTPS com domínios diferentes
-            maxAge: this.configService.get<number>('session.maxAge'),
-          },
-        }),
-        passport.initialize(),
-        passport.session(),
-      )
+      .apply(sessionMiddleware, passport.initialize(), passport.session())
       .forRoutes('*');
   }
 }

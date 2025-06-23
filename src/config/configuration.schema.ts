@@ -9,6 +9,7 @@ export const schema = Joi.object({
   POSTGRES_PASSWORD: Joi.string().default('postgres'),
   POSTGRES_DB: Joi.string().default('ecommerce-platform'),
   SESSION_SECRET: Joi.string().default('secret'),
+  SESSION_DOMAIN: Joi.string().default('localhost'),
   REDIS_HOST: Joi.string().default('redis'),
   REDIS_PORT: Joi.number().default(6379),
   REDIS_PASSWORD: Joi.string().default('redis'),

@@ -10,6 +10,7 @@ export default () => ({
   session: {
     secret: process.env.SESSION_SECRET,
     maxAge: 1000 * 60 * 60 * 24 * 7,
+    domain: process.env.SESSION_DOMAIN,
   },
   redis: {
     host: process.env.REDIS_HOST,
