@@ -40,7 +40,9 @@ export class ProductsService {
     const { id, name, shopName } = filters;
     const queryBuilder = this.productsRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.shop', 'shop');
+      .leftJoinAndSelect('product.shop', 'shop')
+      .leftJoinAndSelect('product.attributes', 'attributes')
+      .leftJoinAndSelect('product.photos', 'photos');
 
     if (id) {
       queryBuilder.andWhere('product.id = :id', { id: +id });
