@@ -114,7 +114,7 @@ export class AppModule {
         name: isAdmin ? 'admin.sid' : 'store.sid',
         cookie: {
           httpOnly: true,
-          secure: false,
+          secure: this.configService.get<string>('nodeEnv') === 'production',
           sameSite: 'lax',
           maxAge: this.configService.get<number>('session.maxAge'),
           path: '/',
