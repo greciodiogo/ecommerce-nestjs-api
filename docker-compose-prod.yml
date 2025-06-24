@@ -15,8 +15,13 @@ services:
       POSTGRES_DB: ecommerce-platform
       PORT: 80
       SESSION_SECRET: "${SESSION_SECRET}"
+      SESSION_DOMAIN: ".encontrarshopping.com"
+      NODE_ENV: "production"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
     command: npm run start:prod
     ports:
       - "80:80"

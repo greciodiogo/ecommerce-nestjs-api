@@ -109,6 +109,20 @@ export class AppModule {
       const nodeEnv = this.configService.get<string>('nodeEnv');
       const sessionDomain = this.configService.get<string>('session.domain');
       
+      // Debug logging for production
+      if (nodeEnv === 'production') {
+        console.log('Session Debug:', {
+          origin: req.headers.origin,
+          referer: req.headers.referer,
+          host: req.headers.host,
+          isAdmin,
+          sessionDomain,
+          secure: nodeEnv === 'production',
+          sameSite: nodeEnv === 'production' ? 'none' : 'lax',
+          domain: nodeEnv === 'production' ? '.encontrarshopping.com' : sessionDomain,
+        });
+      }
+      
       session({
         store: new RedisStore({ client: this.redisClient }),
         secret: this.configService.get<string>('session.secret', ''),

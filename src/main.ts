@@ -9,10 +9,30 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('nodeEnv');
 
+  // Trust proxy for production (important for cookies behind reverse proxy)
+  if (nodeEnv === 'production') {
+    app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  }
+
+  // Configure CORS based on environment
+  if (nodeEnv === 'production') {
     app.enableCors({
-      origin: ['https://admin.encontrarshopping.com', 'https://encontrarshopping.com'],
+      origin: [
+        'https://admin.encontrarshopping.com',
+        'https://encontrarshopping.com',
+        'https://www.encontrarshopping.com',
+        'https://www.admin.encontrarshopping.com'
+      ],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    });
+  } else {
+    app.enableCors({
+      origin: true,
       credentials: true,
     });
+  }
   
 
   const swaggerConfig = new DocumentBuilder()
