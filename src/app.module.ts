@@ -106,6 +106,9 @@ export class AppModule {
 
     const sessionMiddleware = (req, res, next) => {
       const isAdmin = req.headers.origin?.includes('admin') || req.headers.referer?.includes('admin') || req.headers.referer?.includes('5000');
+      const nodeEnv = this.configService.get<string>('nodeEnv');
+      const sessionDomain = this.configService.get<string>('session.domain');
+      
       session({
         store: new RedisStore({ client: this.redisClient }),
         secret: this.configService.get<string>('session.secret', ''),
@@ -114,11 +117,11 @@ export class AppModule {
         name: isAdmin ? 'admin.sid' : 'store.sid',
         cookie: {
           httpOnly: true,
-          secure: this.configService.get<string>('nodeEnv') === 'production',
-          sameSite: 'lax',
+          secure: nodeEnv === 'production',
+          sameSite: nodeEnv === 'production' ? 'none' : 'lax',
           maxAge: this.configService.get<number>('session.maxAge'),
           path: '/',
-          domain: this.configService.get<string>('session.domain'),
+          domain: nodeEnv === 'production' ? '.encontrarshopping.com' : sessionDomain,
         },
       })(req, res, next);
     };
