@@ -76,6 +76,7 @@ export class LocalFilesService {
         fit: 'contain',
         background: '#ffffff',
       })
+      .flatten({ background: '#ffffff' })
       .jpeg({ quality: 80, mozjpeg: true })
       .toBuffer();
 
