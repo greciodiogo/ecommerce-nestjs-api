@@ -48,10 +48,10 @@ export class ProductsService {
       queryBuilder.andWhere('product.id = :id', { id: +id });
     }
     if (name) {
-      queryBuilder.andWhere('product.name LIKE :name', { name: `%${name}%` });
+      queryBuilder.andWhere('LOWER(product.name) LIKE LOWER(:name)', { name: `%${name}%` });
     }
     if (shopName) {
-      queryBuilder.andWhere('shop.shopName LIKE :shopName', {
+      queryBuilder.andWhere('LOWER(shop.shopName) LIKE LOWER(:shopName)', {
         shopName: `%${shopName}%`,
       });
     }
