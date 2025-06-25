@@ -76,7 +76,7 @@ export class ProductsService {
     // ✅ Se price for nulo, define como price + 10%
     for (const product of products) {
       if (product.price == null) {
-        product.price = product.purchasePrice * 1.1;
+        product.price = Math.round(product.purchasePrice * 1.1);
       }
     }
 
@@ -109,7 +109,7 @@ export class ProductsService {
 
     // ✅ Corrige price se estiver ausente
     if (product.price == null) {
-      product.price = product.purchasePrice * 1.1;
+      product.price = Math.round(product.purchasePrice * 1.1);
     }
 
     return product;
@@ -121,8 +121,8 @@ export class ProductsService {
   
     product.name = productData.name;
     product.purchasePrice = productData.purchasePrice;
-    product.price = productData.purchasePrice * 1.1;
-    const calculatedSalesPrice = productData.purchasePrice * 1.1;
+    product.price = Math.round(productData.purchasePrice * 1.1);
+    const calculatedSalesPrice = Math.round(productData.purchasePrice * 1.1);
 
     if (productData.price !== undefined && productData.price < productData.purchasePrice) {
       throw new BadRequestException('O preço de venda (purchasePrice) não pode ser inferior ao preço base (price).');
@@ -176,7 +176,7 @@ export class ProductsService {
 
         // Se purchasePrice foi atualizado, recalcula o price com 10%
     if (productData.purchasePrice !== undefined) {
-      product.price = productData.purchasePrice * 1.1;
+      product.price = Math.round(productData.purchasePrice * 1.1);
     }
 
 
