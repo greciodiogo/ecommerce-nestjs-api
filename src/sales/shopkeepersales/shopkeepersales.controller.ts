@@ -4,6 +4,8 @@ import { ShopkeeperSalesService } from './shopkeepersales.service';
 import { ShopkeeperSaleCreateDto } from './dto/shopkeepersale-create.dto';
 import { ShopkeeperSaleUpdateDto } from './dto/shopkeepersale-update.dto';
 import { ShopkeeperSale } from './shopkeepersale.entity';
+import { ReqUser } from '../../auth/decorators/user.decorator';
+import { User } from '../../users/models/user.entity';
 
 @ApiTags('shopkeepersales')
 @Controller('shopkeepersales')
@@ -46,5 +48,21 @@ export class ShopkeeperSalesController {
   @ApiNotFoundResponse({ description: 'ShopkeeperSale not found' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.shopkeeperSalesService.remove(id);
+  }
+
+  @Post('my/create')
+  @ApiCreatedResponse({ type: ShopkeeperSale, description: 'ShopkeeperSale created for logged user' })
+  @ApiBadRequestResponse({ description: 'Invalid data' })
+  async createForUser(
+    @ReqUser() user: User,
+    @Body() createDto: ShopkeeperSaleCreateDto,
+  ): Promise<ShopkeeperSale> {
+    return this.shopkeeperSalesService.createForUser(user, createDto);
+  }
+
+  @Get('my')
+  @ApiOkResponse({ type: [ShopkeeperSale], description: 'List of ShopkeeperSales for logged user' })
+  async findMySales(@ReqUser() user: User): Promise<ShopkeeperSale[]> {
+    return this.shopkeeperSalesService.findAllForUser(user);
   }
 } 

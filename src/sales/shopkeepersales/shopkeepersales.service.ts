@@ -6,6 +6,7 @@ import { ShopkeeperSaleCreateDto } from './dto/shopkeepersale-create.dto';
 import { ShopkeeperSaleUpdateDto } from './dto/shopkeepersale-update.dto';
 import { Shop } from '../../catalog/shops/models/shop.entity';
 import { Product } from '../../catalog/products/models/product.entity';
+import { User } from '../../users/models/user.entity';
 
 @Injectable()
 export class ShopkeeperSalesService {
@@ -21,6 +22,20 @@ export class ShopkeeperSalesService {
   async create(createDto: ShopkeeperSaleCreateDto): Promise<ShopkeeperSale> {
     const shop = await this.shopRepository.findOne({ where: { id: createDto.shopId } });
     if (!shop) throw new NotFoundException('Shop not found');
+    const products = await this.productRepository.findByIds(createDto.productIds);
+    if (products.length !== createDto.productIds.length) throw new NotFoundException('One or more products not found');
+    const sale = this.shopkeeperSalesRepository.create({
+      order_number: createDto.order_number,
+      shop,
+      products,
+      quantity: createDto.quantity,
+    });
+    return this.shopkeeperSalesRepository.save(sale);
+  }
+
+  async createForUser(user: User, createDto: ShopkeeperSaleCreateDto): Promise<ShopkeeperSale> {
+    const shop = await this.shopRepository.findOne({ where: { user: { id: user.id } } });
+    if (!shop) throw new NotFoundException('User does not have a shop');
     const products = await this.productRepository.findByIds(createDto.productIds);
     if (products.length !== createDto.productIds.length) throw new NotFoundException('One or more products not found');
     const sale = this.shopkeeperSalesRepository.create({
@@ -62,5 +77,11 @@ export class ShopkeeperSalesService {
   async remove(id: number): Promise<void> {
     const sale = await this.findOne(id);
     await this.shopkeeperSalesRepository.remove(sale);
+  }
+
+  async findAllForUser(user: User): Promise<ShopkeeperSale[]> {
+    const shop = await this.shopRepository.findOne({ where: { user: { id: user.id } } });
+    if (!shop) throw new NotFoundException('User does not have a shop');
+    return this.shopkeeperSalesRepository.find({ where: { shop: { id: shop.id } }, relations: ['shop', 'products'] });
   }
 } 
