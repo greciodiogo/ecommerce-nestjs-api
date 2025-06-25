@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { ShopkeeperSalesService } from './shopkeepersales.service';
 import { ShopkeeperSaleCreateDto } from './dto/shopkeepersale-create.dto';
@@ -6,6 +6,7 @@ import { ShopkeeperSaleUpdateDto } from './dto/shopkeepersale-update.dto';
 import { ShopkeeperSale } from './shopkeepersale.entity';
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
+import { ShopkeeperSaleFilterDto } from './dto/shopkeepersale-filter.dto';
 
 @ApiTags('shopkeepersales')
 @Controller('shopkeepersales')
@@ -21,8 +22,8 @@ export class ShopkeeperSalesController {
 
   @Get()
   @ApiOkResponse({ type: [ShopkeeperSale], description: 'List of all ShopkeeperSales' })
-  findAll(): Promise<ShopkeeperSale[]> {
-    return this.shopkeeperSalesService.findAll();
+  async findAll(@Query() filters: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
+    return this.shopkeeperSalesService.findAll(filters);
   }
 
   @Get(':id')
@@ -62,7 +63,7 @@ export class ShopkeeperSalesController {
 
   @Get('my')
   @ApiOkResponse({ type: [ShopkeeperSale], description: 'List of ShopkeeperSales for logged user' })
-  async findMySales(@ReqUser() user: User): Promise<ShopkeeperSale[]> {
-    return this.shopkeeperSalesService.findAllForUser(user);
+  async findMySales(@ReqUser() user: User, @Query() filters: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
+    return this.shopkeeperSalesService.findAllForUser(user, filters);
   }
 } 

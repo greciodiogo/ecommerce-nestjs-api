@@ -7,6 +7,8 @@ import { ShopkeeperSaleUpdateDto } from './dto/shopkeepersale-update.dto';
 import { Shop } from '../../catalog/shops/models/shop.entity';
 import { Product } from '../../catalog/products/models/product.entity';
 import { User } from '../../users/models/user.entity';
+import { ShopkeeperSaleFilterDto } from './dto/shopkeepersale-filter.dto';
+import { Between } from 'typeorm';
 
 @Injectable()
 export class ShopkeeperSalesService {
@@ -47,8 +49,28 @@ export class ShopkeeperSalesService {
     return this.shopkeeperSalesRepository.save(sale);
   }
 
-  findAll(): Promise<ShopkeeperSale[]> {
-    return this.shopkeeperSalesRepository.find({ relations: ['shop', 'products'] });
+  async findAll(filters?: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
+    const query = this.shopkeeperSalesRepository.createQueryBuilder('sale')
+      .leftJoinAndSelect('sale.shop', 'shop')
+      .leftJoinAndSelect('sale.products', 'product');
+
+    if (filters?.orderNumber) {
+      query.andWhere('sale.order_number ILIKE :orderNumber', { orderNumber: `%${filters.orderNumber}%` });
+    }
+    if (filters?.productName) {
+      query.andWhere('product.name ILIKE :productName', { productName: `%${filters.productName}%` });
+    }
+    if (filters?.productId) {
+      query.andWhere('product.id = :productId', { productId: filters.productId });
+    }
+    if (filters?.date) {
+      const startDate = new Date(filters.date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(filters.date);
+      endDate.setHours(23, 59, 59, 999);
+      query.andWhere('sale.created BETWEEN :startDate AND :endDate', { startDate, endDate });
+    }
+    return query.getMany();
   }
 
   async findOne(id: number): Promise<ShopkeeperSale> {
@@ -79,9 +101,30 @@ export class ShopkeeperSalesService {
     await this.shopkeeperSalesRepository.remove(sale);
   }
 
-  async findAllForUser(user: User): Promise<ShopkeeperSale[]> {
+  async findAllForUser(user: User, filters?: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
     const shop = await this.shopRepository.findOne({ where: { user: { id: user.id } } });
     if (!shop) throw new NotFoundException('User does not have a shop');
-    return this.shopkeeperSalesRepository.find({ where: { shop: { id: shop.id } }, relations: ['shop', 'products'] });
+    const query = this.shopkeeperSalesRepository.createQueryBuilder('sale')
+      .leftJoinAndSelect('sale.shop', 'shop')
+      .leftJoinAndSelect('sale.products', 'product')
+      .where('sale.shop = :shopId', { shopId: shop.id });
+
+    if (filters?.orderNumber) {
+      query.andWhere('sale.order_number ILIKE :orderNumber', { orderNumber: `%${filters.orderNumber}%` });
+    }
+    if (filters?.productName) {
+      query.andWhere('product.name ILIKE :productName', { productName: `%${filters.productName}%` });
+    }
+    if (filters?.productId) {
+      query.andWhere('product.id = :productId', { productId: filters.productId });
+    }
+    if (filters?.date) {
+      const startDate = new Date(filters.date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(filters.date);
+      endDate.setHours(23, 59, 59, 999);
+      query.andWhere('sale.created BETWEEN :startDate AND :endDate', { startDate, endDate });
+    }
+    return query.getMany();
   }
 } 
