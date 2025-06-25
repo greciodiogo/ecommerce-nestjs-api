@@ -29,6 +29,7 @@ import { CartsModule } from './carts/carts.module';
 import { DashboardModule } from './utilitarios/dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notification.module';
 import { AddressModule } from './address/address.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { AddressModule } from './address/address.module';
     CartsModule,
     NotificationsModule,
     AddressModule,
+    FeedbackModule,
   ],
   controllers: [],
   providers: [

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
+import { FeedbackDto } from './dto/feedback.dto';
 
 @Injectable()
 export class MailService {
@@ -63,6 +64,32 @@ export class MailService {
       return { message: 'Resumo do pedido enviado para o seu email.' };
     } catch (err) {
       console.error('Erro ao enviar e-mail:', err);
+    }
+  }
+
+  async sendFeedbackEmail(feedbackDto: FeedbackDto) {
+    const { email, subject, body } = feedbackDto;
+    const adminEmail = this.configService.get<string>('admin.email');
+
+    const html = this.compileTemplate('feedback.html', {
+      email,
+      subject,
+      body,
+    });
+
+    const mailOptions = {
+      from: `"${email}" <${this.configService.get<string>('email.user')}>`,
+      to: adminEmail,
+      replyTo: email,
+      subject: `Novo Feedback/Reclamação: ${subject}`,
+      html,
+    };
+
+    try {
+      await this.emailTransport().sendMail(mailOptions);
+      return { message: 'Seu feedback foi enviado com sucesso.' };
+    } catch (err) {
+      console.error('Erro ao enviar e-mail de feedback:', err);
     }
   }
 }

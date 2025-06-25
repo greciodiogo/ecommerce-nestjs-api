@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Feedback Recebido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        h1 {
+            color: #b66506;
+        }
+        p {
+            line-height: 1.6;
+        }
+        .info {
+            background-color: #ffe4ae;
+            border-left: 4px solid #b66506;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .info p {
+            margin: 5px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nova Mensagem de Feedback/Reclamação</h1>
+        <div class="info">
+            <p><strong>De:</strong> <a href="mailto:{{email}}">{{email}}</a></p>
+            <p><strong>Assunto:</strong> {{subject}}</p>
+        </div>
+        <div>
+            <p><strong>Mensagem:</strong></p>
+            <p>{{body}}</p>
+        </div>
+        <div class="footer">
+            <p>Esta é uma notificação automática. Por favor, responda diretamente para o e-mail do remetente.</p>
+        </div>
+    </div>
+</body>
+</html> 
