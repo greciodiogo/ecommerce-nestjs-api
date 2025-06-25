@@ -263,32 +263,28 @@ export class OrdersService {
   }
 
   async notifyShopkeepersOnOrder(order: any): Promise<any> {
-    const uniqueShopkeepers = new Map<number, { userId: number; productIds: number[] }>();
+    const uniqueShopkeepers = new Map<number, { userId: number; products: { id: number; quantity: number }[] }>();
 
     for (const item of order.items) {
-
       const product_ = await this.productsService.getProduct(item.productId);
-
       const shop = await this.shopsRepository.findOne({
         where: { id: product_.shopId },
         relations: ['user'],
       });
-
       if (!shop || !shop.user) continue;
-
       if (!uniqueShopkeepers.has(shop.user.id)) {
         uniqueShopkeepers.set(shop.user.id, {
           userId: shop.user.id,
-          productIds: [],
+          products: [],
         });
       }
-
-      uniqueShopkeepers.get(shop.user.id)?.productIds.push(product_.id);
+      uniqueShopkeepers.get(shop.user.id)?.products.push({ id: product_.id, quantity: item.quantity });
     }
     for (const shopkeeper of uniqueShopkeepers.values()) {
+      const productDetails = shopkeeper.products.map(p => `ID: ${p.id}, Qty: ${p.quantity}`).join(' | ');
       await this.notificationsService.createNotification({
-        title: `New Order #${order.order_number}, Products: ${shopkeeper.productIds.join(', ')}`,
-        message: `Products: ${shopkeeper.productIds.join(', ')} added to order.`,
+        title: `New Order #${order.order_number}, Products: ${productDetails}`,
+        message: `Products in your order: ${productDetails}`,
         userId: shopkeeper.userId,
       });
     }
