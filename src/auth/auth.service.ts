@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { Role } from '../users/models/role.enum';
 import { SendVerificationCodeDto } from './dto/verificationCode.dto';
 import { CodesService } from './../codes/codes.service';
+import { ConflictError } from '../errors/conflict.error';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -45,6 +46,11 @@ export class AuthService implements OnModuleInit {
   }
 
   async sendVerificationCode(codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+    // Check if user already exists
+    const existingUser = await this.usersService.findUserByEmail(codeDto.email);
+    if (existingUser) {
+      throw new ConflictError('user', 'email', codeDto.email);
+    }
     return await this.codesService.sendVerificationCode(codeDto.email);
   }
 

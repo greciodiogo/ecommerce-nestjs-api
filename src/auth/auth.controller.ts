@@ -42,7 +42,7 @@ export class AuthController {
   @Post('send-verification-code')
   @ApiCreatedResponse({ type: SendVerificationCodeDto, description: 'Send Verification Code to User' })
   @ApiBadRequestResponse({ description: 'Invalid Email' })
-  @ApiConflictResponse({ description: 'User with given email does not exists' })
+  @ApiConflictResponse({ description: 'User with given email already exists' })
   async sendVerificationCode(@Body() codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
     return this.authService.sendVerificationCode(codeDto);
   }
