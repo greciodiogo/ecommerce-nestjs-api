@@ -22,6 +22,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -69,6 +70,13 @@ export class OrdersController {
   @ApiOkResponse({ type: [Order], description: 'List of all orders' })
   async getOrders(@Query() filters: OrderFilterDto): Promise<Order[]> {
     return this.ordersService.getOrders(filters);
+  }
+
+  @Get('/by-email')
+  @ApiOkResponse({ type: [Order], description: "List of a customer's orders by email" })
+  @ApiQuery({ name: 'email', required: true, type: String })
+  async getOrdersByEmail(@Query('email') email: string): Promise<Order[]> {
+    return this.ordersService.getOrdersByEmail(email);
   }
 
   @Get('/my')

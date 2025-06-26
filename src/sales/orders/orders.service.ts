@@ -186,6 +186,19 @@ export class OrdersService {
     return order;
   }
 
+  async getOrdersByEmail(email: string): Promise<Order[]> {
+    return this.ordersRepository.find({
+      where: { contactEmail: email },
+      relations: [
+        'items',
+        'items.product',
+        'delivery',
+        'payment',
+        'return',
+      ],
+    });
+  }
+
   async checkOrderUser(userId: number, id: number): Promise<boolean> {
     const order = await this.ordersRepository.findOne({
       where: { id, user: { id: userId } },
