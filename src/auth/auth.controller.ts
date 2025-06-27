@@ -6,13 +6,14 @@ import {
   UseGuards,
   UseInterceptors,
   Req,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { User } from '../users/models/user.entity';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SessionAuthGuard } from './guards/session-auth.guard';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -51,8 +52,22 @@ export class AuthController {
   @ApiCreatedResponse({ type: SendVerificationCodeDto, description: 'Send Verification Code to User' })
   @ApiBadRequestResponse({ description: 'Invalid Email' })
   @ApiConflictResponse({ description: 'User with given email does not exists' })
-  async verifyCode(@Body() codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
-    return this.authService.verifyCode(codeDto);
+  async verifyCode(@Body() codeDto: SendVerificationCodeDto, @Req() req: Request, @Res() res: Response) {
+    // First, verify the code
+    const verificationResult = await this.authService.verifyCode(codeDto);
+    // Find the user after verification
+    const user = await this.authService['usersService'].findUserByEmail(codeDto.email);
+    if (!user) {
+      return res.status(400).json({ message: 'User not found after verification' });
+    }
+    // Auto-login the user
+    req.login(user, (err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Login failed' });
+      }
+      // Now the session cookie is set!
+      return res.json({ message: 'Verified and logged in', user });
+    });
   }
 
   @UseGuards(LocalAuthGuard)
