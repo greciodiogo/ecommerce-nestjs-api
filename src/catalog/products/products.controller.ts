@@ -41,13 +41,14 @@ export class ProductsController {
 
   @Get()
   @ApiOkResponse({ type: [Product], description: 'List of all products' })
-  @ApiQuery({ name: 'withVisible', required: false, type: Boolean })
+  @ApiQuery({ name: 'context', required: false, type: String })
   getProducts(
     @Query() filters: ProductFilterDto,
     @ReqUser() user?: User,
-    @Query('withVisible') withVisible?: string,
+    @Query('context') context?: string,
   ): Promise<Product[]> {
-    const onlyVisible = withVisible === 'true'; // ✅ true só quando explicitamente 'true'
+    // If context is 'store', show all products. Otherwise, only visible products.
+    const onlyVisible = context !== 'store';
     return this.productsService.getProducts(filters, user, onlyVisible);
   }
 
