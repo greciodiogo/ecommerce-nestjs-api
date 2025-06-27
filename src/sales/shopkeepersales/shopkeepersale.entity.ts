@@ -7,9 +7,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Shop } from '../../catalog/shops/models/shop.entity';
 import { Product } from '../../catalog/products/models/product.entity';
+import { ShopkeeperSaleProduct } from './shopkeepersale-product.entity';
 
 @Entity('shopkeeper_sales')
 export class ShopkeeperSale {
@@ -28,10 +30,6 @@ export class ShopkeeperSale {
   @ManyToOne(() => Shop, { nullable: false, onDelete: 'CASCADE' })
   shop: Shop;
 
-  @ManyToMany(() => Product)
-  @JoinTable({ name: 'shopkeeper_sale_products' })
-  products: Product[];
-
-  @Column('int')
-  quantity: number;
+  @OneToMany(() => ShopkeeperSaleProduct, (sp) => sp.shopkeeperSale, { cascade: true })
+  products: ShopkeeperSaleProduct[];
 } 

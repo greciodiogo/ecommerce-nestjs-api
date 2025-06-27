@@ -9,6 +9,7 @@ import { Product } from '../../catalog/products/models/product.entity';
 import { User } from '../../users/models/user.entity';
 import { ShopkeeperSaleFilterDto } from './dto/shopkeepersale-filter.dto';
 import { Between } from 'typeorm';
+import { ShopkeeperSaleProduct } from './shopkeepersale-product.entity';
 
 @Injectable()
 export class ShopkeeperSalesService {
@@ -24,29 +25,47 @@ export class ShopkeeperSalesService {
   async create(createDto: ShopkeeperSaleCreateDto): Promise<ShopkeeperSale> {
     const shop = await this.shopRepository.findOne({ where: { id: createDto.shopId } });
     if (!shop) throw new NotFoundException('Shop not found');
-    const products = await this.productRepository.findByIds(createDto.productIds);
-    if (products.length !== createDto.productIds.length) throw new NotFoundException('One or more products not found');
     const sale = this.shopkeeperSalesRepository.create({
       order_number: createDto.order_number,
       shop,
-      products,
-      quantity: createDto.quantity,
     });
-    return this.shopkeeperSalesRepository.save(sale);
+    const savedSale = await this.shopkeeperSalesRepository.save(sale);
+    // Create ShopkeeperSaleProduct entries
+    const saleProducts: ShopkeeperSaleProduct[] = [];
+    for (const p of createDto.products) {
+      const product = await this.productRepository.findOne({ where: { id: p.productId } });
+      if (!product) throw new NotFoundException(`Product with id ${p.productId} not found`);
+      const saleProduct = new ShopkeeperSaleProduct();
+      saleProduct.shopkeeperSale = savedSale;
+      saleProduct.product = product;
+      saleProduct.quantity = p.quantity;
+      saleProducts.push(saleProduct);
+    }
+    await Promise.all(saleProducts.map(sp => this.shopkeeperSalesRepository.manager.save(sp)));
+    return this.findOne(savedSale.id);
   }
 
   async createForUser(user: User, createDto: ShopkeeperSaleCreateDto): Promise<ShopkeeperSale> {
     const shop = await this.shopRepository.findOne({ where: { user: { id: user.id } } });
     if (!shop) throw new NotFoundException('User does not have a shop');
-    const products = await this.productRepository.findByIds(createDto.productIds);
-    if (products.length !== createDto.productIds.length) throw new NotFoundException('One or more products not found');
     const sale = this.shopkeeperSalesRepository.create({
       order_number: createDto.order_number,
       shop,
-      products,
-      quantity: createDto.quantity,
     });
-    return this.shopkeeperSalesRepository.save(sale);
+    const savedSale = await this.shopkeeperSalesRepository.save(sale);
+    // Create ShopkeeperSaleProduct entries
+    const saleProducts: ShopkeeperSaleProduct[] = [];
+    for (const p of createDto.products) {
+      const product = await this.productRepository.findOne({ where: { id: p.productId } });
+      if (!product) throw new NotFoundException(`Product with id ${p.productId} not found`);
+      const saleProduct = new ShopkeeperSaleProduct();
+      saleProduct.shopkeeperSale = savedSale;
+      saleProduct.product = product;
+      saleProduct.quantity = p.quantity;
+      saleProducts.push(saleProduct);
+    }
+    await Promise.all(saleProducts.map(sp => this.shopkeeperSalesRepository.manager.save(sp)));
+    return this.findOne(savedSale.id);
   }
 
   async findAll(filters?: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
@@ -86,14 +105,26 @@ export class ShopkeeperSalesService {
       if (!shop) throw new NotFoundException('Shop not found');
       sale.shop = shop;
     }
-    if (updateDto.productIds) {
-      const products = await this.productRepository.findByIds(updateDto.productIds);
-      if (products.length !== updateDto.productIds.length) throw new NotFoundException('One or more products not found');
-      sale.products = products;
-    }
     if (updateDto.order_number !== undefined) sale.order_number = updateDto.order_number;
-    if (updateDto.quantity !== undefined) sale.quantity = updateDto.quantity;
-    return this.shopkeeperSalesRepository.save(sale);
+    await this.shopkeeperSalesRepository.save(sale);
+    // Update products if provided
+    if (updateDto.products) {
+      // Remove existing products
+      await this.shopkeeperSalesRepository.manager.delete(ShopkeeperSaleProduct, { shopkeeperSale: sale });
+      // Add new products
+      const saleProducts: ShopkeeperSaleProduct[] = [];
+      for (const p of updateDto.products) {
+        const product = await this.productRepository.findOne({ where: { id: p.productId } });
+        if (!product) throw new NotFoundException(`Product with id ${p.productId} not found`);
+        const saleProduct = new ShopkeeperSaleProduct();
+        saleProduct.shopkeeperSale = sale;
+        saleProduct.product = product;
+        saleProduct.quantity = p.quantity;
+        saleProducts.push(saleProduct);
+      }
+      await Promise.all(saleProducts.map(sp => this.shopkeeperSalesRepository.manager.save(sp)));
+    }
+    return this.findOne(sale.id);
   }
 
   async remove(id: number): Promise<void> {

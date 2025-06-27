@@ -1,4 +1,13 @@
-import { IsInt, IsNotEmpty, IsString, IsArray, ArrayNotEmpty, IsOptional } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, IsArray, ArrayNotEmpty, ValidateNested, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class ShopkeeperSaleProductCreateDto {
+  @IsInt()
+  productId: number;
+
+  @IsInt()
+  quantity: number;
+}
 
 export class ShopkeeperSaleCreateDto {
   @IsString()
@@ -11,10 +20,7 @@ export class ShopkeeperSaleCreateDto {
 
   @IsArray()
   @ArrayNotEmpty()
-  @IsInt({ each: true })
-  productIds: number[];
-
-  @IsInt()
-  @IsNotEmpty()
-  quantity: number;
+  @ValidateNested({ each: true })
+  @Type(() => ShopkeeperSaleProductCreateDto)
+  products: ShopkeeperSaleProductCreateDto[];
 } 
