@@ -15,4 +15,8 @@ export class CreateAddressDto {
   @IsOptional()
   @IsNumber()
   parentAddressId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  price?: number;
 } 

@@ -16,4 +16,8 @@ export class UpdateAddressDto {
   @IsOptional()
   @IsNumber()
   parentAddressId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  price?: number;
 } 

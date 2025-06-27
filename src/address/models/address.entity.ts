@@ -20,6 +20,9 @@ export class Address {
   @Column({ default: true })
   visible: boolean;
 
+  @Column({ type: 'double precision', nullable: true })
+  price?: number;
+
   @ManyToOne(() => Address, (address) => address.childAddresses, {
     onDelete: 'SET NULL',
     nullable: true,
