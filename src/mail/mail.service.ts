@@ -78,8 +78,8 @@ export class MailService {
     });
 
     const mailOptions = {
-      from: `"${email}" <${this.configService.get<string>('email.user')}>`,
-      to: adminEmail,
+      to: `"${email}" <${this.configService.get<string>('email.user')}>`,
+      from: adminEmail,
       replyTo: email,
       subject: `Novo Feedback/Reclamação: ${subject}`,
       html,
