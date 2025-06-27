@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, IsArray, ArrayNotEmpty } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, IsArray, ArrayNotEmpty, IsOptional } from 'class-validator';
 
 export class ShopkeeperSaleCreateDto {
   @IsString()
@@ -6,8 +6,8 @@ export class ShopkeeperSaleCreateDto {
   order_number: string;
 
   @IsInt()
-  @IsNotEmpty()
-  shopId: number;
+  @IsOptional()
+  shopId?: number;
 
   @IsArray()
   @ArrayNotEmpty()

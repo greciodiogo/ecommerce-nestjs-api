@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { ShopkeeperSalesService } from './shopkeepersales.service';
 import { ShopkeeperSaleCreateDto } from './dto/shopkeepersale-create.dto';
@@ -7,6 +7,7 @@ import { ShopkeeperSale } from './shopkeepersale.entity';
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
 import { ShopkeeperSaleFilterDto } from './dto/shopkeepersale-filter.dto';
+import { SessionAuthGuard } from '../../auth/guards/session-auth.guard';
 
 @ApiTags('shopkeepersales')
 @Controller('shopkeepersales')
@@ -52,18 +53,22 @@ export class ShopkeeperSalesController {
   }
 
   @Post('my/create')
+  @UseGuards(SessionAuthGuard)
   @ApiCreatedResponse({ type: ShopkeeperSale, description: 'ShopkeeperSale created for logged user' })
   @ApiBadRequestResponse({ description: 'Invalid data' })
   async createForUser(
     @ReqUser() user: User,
     @Body() createDto: ShopkeeperSaleCreateDto,
   ): Promise<ShopkeeperSale> {
+    if (!user) throw new UnauthorizedException('User not authenticated');
     return this.shopkeeperSalesService.createForUser(user, createDto);
   }
 
   @Get('my')
+  @UseGuards(SessionAuthGuard)
   @ApiOkResponse({ type: [ShopkeeperSale], description: 'List of ShopkeeperSales for logged user' })
   async findMySales(@ReqUser() user: User, @Query() filters: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
+    if (!user) throw new UnauthorizedException('User not authenticated');
     return this.shopkeeperSalesService.findAllForUser(user, filters);
   }
 } 

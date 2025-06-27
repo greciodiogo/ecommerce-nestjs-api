@@ -1,4 +1,5 @@
-import { IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsNumberString, IsDateString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class ShopkeeperSaleFilterDto {
   @IsOptional()
@@ -10,8 +11,9 @@ export class ShopkeeperSaleFilterDto {
   productName?: string;
 
   @IsOptional()
-  @IsNumber()
-  productId?: number;
+  @IsNumberString()
+  @Transform(({ value }) => value === '' ? undefined : value)
+  productId?: string;
 
   @IsOptional()
   @IsDateString()

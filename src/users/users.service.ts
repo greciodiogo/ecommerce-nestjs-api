@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Not, Repository } from 'typeorm';
+import { Between, ILike, Not, Repository } from 'typeorm';
 import { User } from './models/user.entity';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { NotFoundError } from '../errors/not-found.error';
@@ -24,7 +24,7 @@ export class UsersService {
   ): Promise<User> {
     try {
       const user = new User();
-      user.email = email;
+      user.email = email.trim().toLowerCase();
       user.password = hashedPassword;
       user.firstName = firstName;
       user.lastName = lastName;
@@ -39,7 +39,7 @@ export class UsersService {
 
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.usersRepository.findOne({
-      where: { email },
+      where: { email: ILike(email) },
     });
   }
   async findUsersByRole(role: Role): Promise<Array<User> | null> {
@@ -56,7 +56,7 @@ export class UsersService {
 
   async findUserToLogin(email: string): Promise<User | null> {
     return await this.usersRepository.findOne({
-      where: { email },
+      where: { email: ILike(email) },
       select: {
         password: true,
         firstName: true,
