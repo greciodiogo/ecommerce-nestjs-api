@@ -108,6 +108,7 @@ export class AppModule {
 
     const sessionMiddleware = (req, res, next) => {
       const isAdmin = req.headers.origin?.includes('admin') || req.headers.referer?.includes('admin') || req.headers.referer?.includes('5000');
+      req.isAdmin = isAdmin;
       const nodeEnv = this.configService.get<string>('nodeEnv');
       const sessionDomain = this.configService.get<string>('session.domain');
       

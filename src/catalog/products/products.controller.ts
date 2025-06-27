@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './models/product.entity';
@@ -33,6 +34,7 @@ import {
 import { ReqUser } from '../../auth/decorators/user.decorator';
 import { User } from '../../users/models/user.entity';
 import { ProductFilterDto } from './dto/product-filter.dto';
+import { Request } from 'express';
 
 @ApiTags('products')
 @Controller('products')
@@ -44,11 +46,11 @@ export class ProductsController {
   @ApiQuery({ name: 'context', required: false, type: String })
   getProducts(
     @Query() filters: ProductFilterDto,
-    @ReqUser() user?: User,
-    @Query('context') context?: string,
+    @ReqUser() user: User,
+    @Req() req: Request,
   ): Promise<Product[]> {
-    // If context is 'store', show all products. Otherwise, only visible products.
-    const onlyVisible = context !== 'store';
+    // Only show hidden products if isAdmin is true (dashboard/store)
+    const onlyVisible = !req['isAdmin'];
     return this.productsService.getProducts(filters, user, onlyVisible);
   }
 
