@@ -71,7 +71,8 @@ export class ShopkeeperSalesService {
   async findAll(filters?: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
     const query = this.shopkeeperSalesRepository.createQueryBuilder('sale')
       .leftJoinAndSelect('sale.shop', 'shop')
-      .leftJoinAndSelect('sale.products', 'product');
+      .leftJoinAndSelect('sale.products', 'saleProduct')
+      .leftJoinAndSelect('saleProduct.product', 'product');
 
     if (filters?.orderNumber) {
       query.andWhere('sale.order_number ILIKE :orderNumber', { orderNumber: `%${filters.orderNumber}%` });
@@ -82,13 +83,19 @@ export class ShopkeeperSalesService {
     if (filters?.productId) {
       query.andWhere('product.id = :productId', { productId: filters.productId });
     }
-    if (filters?.date) {
-      const startDate = new Date(filters.date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(filters.date);
-      endDate.setHours(23, 59, 59, 999);
-      query.andWhere('sale.created BETWEEN :startDate AND :endDate', { startDate, endDate });
+    if (filters?.startDate || filters?.endDate) {
+      if (filters.startDate) {
+        const startDate = new Date(filters.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        query.andWhere('sale.created >= :startDate', { startDate });
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        query.andWhere('sale.created <= :endDate', { endDate });
+      }
     }
+
     return query.getMany();
   }
 
@@ -135,9 +142,11 @@ export class ShopkeeperSalesService {
   async findAllForUser(user: User, filters?: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
     const shop = await this.shopRepository.findOne({ where: { user: { id: user.id } } });
     if (!shop) throw new NotFoundException('User does not have a shop');
+    
     const query = this.shopkeeperSalesRepository.createQueryBuilder('sale')
       .leftJoinAndSelect('sale.shop', 'shop')
-      .leftJoinAndSelect('sale.products', 'product')
+      .leftJoinAndSelect('sale.products', 'saleProduct')
+      .leftJoinAndSelect('saleProduct.product', 'product')
       .where('sale.shop = :shopId', { shopId: shop.id });
 
     if (filters?.orderNumber) {
@@ -149,13 +158,19 @@ export class ShopkeeperSalesService {
     if (filters?.productId) {
       query.andWhere('product.id = :productId', { productId: filters.productId });
     }
-    if (filters?.date) {
-      const startDate = new Date(filters.date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(filters.date);
-      endDate.setHours(23, 59, 59, 999);
-      query.andWhere('sale.created BETWEEN :startDate AND :endDate', { startDate, endDate });
+    if (filters?.startDate || filters?.endDate) {
+      if (filters.startDate) {
+        const startDate = new Date(filters.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        query.andWhere('sale.created >= :startDate', { startDate });
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        query.andWhere('sale.created <= :endDate', { endDate });
+      }
     }
+
     return query.getMany();
   }
 } 
