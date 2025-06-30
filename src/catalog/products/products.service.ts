@@ -37,7 +37,7 @@ export class ProductsService {
     user?: User,
     onlyVisible?: boolean,
   ): Promise<Product[]> {
-    const { id, name, shopName } = filters;
+    const { id, name, shopName, minStock, maxStock, minPrice, maxPrice } = filters;
     const queryBuilder = this.productsRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.shop', 'shop')
@@ -54,6 +54,19 @@ export class ProductsService {
       queryBuilder.andWhere('LOWER(shop.shopName) LIKE LOWER(:shopName)', {
         shopName: `%${shopName}%`,
       });
+    }
+
+    if (minStock !== undefined) {
+      queryBuilder.andWhere('product.stock >= :minStock', { minStock });
+    }
+    if (maxStock !== undefined) {
+      queryBuilder.andWhere('product.stock <= :maxStock', { maxStock });
+    }
+    if (minPrice !== undefined) {
+      queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+    }
+    if (maxPrice !== undefined) {
+      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
     }
 
     if (user) {
