@@ -34,6 +34,9 @@ export class ShopsService {
         'products',
         ...(withProducts ? ['products.product'] : []),
       ],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 
@@ -45,6 +48,9 @@ export class ShopsService {
         'products',
         'products.product',
       ],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 

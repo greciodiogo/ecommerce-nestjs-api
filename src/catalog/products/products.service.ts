@@ -71,7 +71,7 @@ export class ProductsService {
       queryBuilder.andWhere('product.visible = :visible', { visible: true });
     }
 
-    const products = await queryBuilder.getMany();
+    const products = await queryBuilder.orderBy('product.updated', 'DESC').getMany();
 
     // ✅ Se price for nulo, define como price + 10%
     for (const product of products) {

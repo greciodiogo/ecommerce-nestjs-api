@@ -19,7 +19,7 @@ export class PromotionsService {
   async getPromotions(): Promise<Promotion[]> {
     return this.promotionsRepository.find({
       relations: ['categories'],
-      order: { created: 'DESC' },
+      order: { updated: 'DESC' },
     });
   }
 
@@ -32,7 +32,7 @@ export class PromotionsService {
         endDate: { $gte: now } as any,
       },
       relations: ['categories'],
-      order: { created: 'DESC' },
+      order: { updated: 'DESC' },
     });
   }
 
@@ -118,7 +118,7 @@ export class PromotionsService {
       .andWhere('promotion.isActive = :isActive', { isActive: true })
       .andWhere('promotion.startDate <= :now', { now })
       .andWhere('promotion.endDate >= :now', { now })
-      .orderBy('promotion.created', 'DESC')
+      .orderBy('promotion.updated', 'DESC')
       .getMany();
   }
 

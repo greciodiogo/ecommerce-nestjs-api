@@ -20,11 +20,19 @@ export class WishlistsService {
   async getWishlists(): Promise<Wishlist[]> {
     return await this.wishlistsRepository.find({
       relations: ['user', 'products'],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 
   async getUserWishlists(user: User): Promise<Wishlist[]> {
-    return this.wishlistsRepository.find({ where: { user: { id: user.id } } });
+    return this.wishlistsRepository.find({
+      where: { user: { id: user.id } },
+      order: {
+        updated: 'DESC',
+      },
+    });
   }
 
   async getWishlist(userId: number, id: number): Promise<Wishlist> {

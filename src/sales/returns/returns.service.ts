@@ -19,6 +19,9 @@ export class ReturnsService {
   async getReturns(): Promise<Return[]> {
     return this.returnsRepository.find({
       relations: ['order', 'order.items'],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 

@@ -96,6 +96,9 @@ export class OrdersService {
         'payment',
         'return',
       ],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 
@@ -151,6 +154,9 @@ export class OrdersService {
         'payment',
         'return',
       ],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 
@@ -165,6 +171,9 @@ export class OrdersService {
         'payment',
         'return',
       ],
+      order: {
+        updated: 'DESC',
+      },
     });
   }
 
