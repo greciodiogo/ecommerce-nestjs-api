@@ -64,7 +64,7 @@ export class ShopkeeperSalesController {
     return this.shopkeeperSalesService.createForUser(user, createDto);
   }
 
-  @Get('my')
+  @Get('my/findAllForUser')
   @UseGuards(SessionAuthGuard)
   @ApiOkResponse({ type: [ShopkeeperSale], description: 'List of ShopkeeperSales for logged user' })
   async findMySales(@ReqUser() user: User, @Query() filters: ShopkeeperSaleFilterDto): Promise<ShopkeeperSale[]> {
