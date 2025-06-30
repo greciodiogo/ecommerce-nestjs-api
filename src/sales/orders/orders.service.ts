@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Between, Column, Repository } from 'typeorm';
+import { Between, Column, Repository, Like } from 'typeorm';
 import { Order } from './models/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderCreateDto } from './dto/order-create.dto';
@@ -59,22 +59,64 @@ export class OrdersService {
     withUser = false,
     withProducts = false,
   ): Promise<Order[]> {
-    const { order_number, date, shopName } = filters;
+    const { 
+      order_number, 
+      customerName, 
+      status, 
+      paymentMethodId, 
+      deliveryMethodId, 
+      startDate, 
+      endDate, 
+      shopName 
+    } = filters;
+    
     const where: any = {};
 
-    if (order_number) {
+    if (order_number && order_number.trim() !== '') {
       where.order_number = order_number;
     }
 
-    if (date) {
-      const startDate = new Date(date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
-      where.created = Between(startDate, endDate);
+    if (customerName && customerName.trim() !== '') {
+      where.fullName = Like(`%${customerName}%`);
     }
 
-    if (shopName) {
+    if (status) {
+      where.status = status;
+    }
+
+    if (paymentMethodId && paymentMethodId.trim() !== '') {
+      where.payment = {
+        method: {
+          id: paymentMethodId
+        }
+      };
+    }
+
+    if (deliveryMethodId && deliveryMethodId.trim() !== '') {
+      where.delivery = {
+        method: {
+          id: deliveryMethodId
+        }
+      };
+    }
+
+    if (startDate || endDate) {
+      where.created = {};
+      
+      if (startDate && startDate.trim() !== '') {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.created.gte = start;
+      }
+      
+      if (endDate && endDate.trim() !== '') {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.created.lte = end;
+      }
+    }
+
+    if (shopName && shopName.trim() !== '') {
       where.items = {
         product: {
           shop: {
@@ -93,7 +135,9 @@ export class OrdersService {
         'items.product.shop',
         ...(withProducts ? ['items.product'] : []),
         'delivery',
+        'delivery.method',
         'payment',
+        'payment.method',
         'return',
       ],
       order: {
