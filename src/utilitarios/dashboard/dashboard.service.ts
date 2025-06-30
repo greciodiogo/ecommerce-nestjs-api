@@ -7,6 +7,7 @@ import { DashboardState } from './model/dashboard.model';
 import { OrderStatus } from 'src/sales/orders/models/order-status.enum';
 import { ProductsService } from 'src/catalog/products/products.service';
 import { DashboardFilterDto } from './dto/dashboard-filter.dto';
+import { User } from 'src/users/models/user.entity';
 
 @Injectable()
 export class DashboardService {
@@ -20,6 +21,7 @@ export class DashboardService {
   // Método que calcula e retorna as métricas do Dashboard
   async getDashboardData(
     filters: DashboardFilterDto,
+    user: User,
   ): Promise<DashboardState> {
     const { period } = filters;
     return {
@@ -38,7 +40,7 @@ export class DashboardService {
       newUsers: await this.usersService.getNewUsersCount(period),
       totalSales: await this.getTotalSales(period),
       lowStockProductsCount:
-        await this.productsService.getLowStockProductsCount(5),
+        await this.productsService.getLowStockProductsCount(5, user),
     };
   }
 

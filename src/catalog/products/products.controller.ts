@@ -118,8 +118,11 @@ export class ProductsController {
 
   
   @Get('/dashboard/low-stock')
-  async getLowStockProductsCount(@Query('quantity',  new DefaultValuePipe(5), ParseIntPipe) quantity: number,) {
-    const count = await this.productsService.getLowStockProductsCount(quantity);
+  async getLowStockProductsCount(
+    @Query('quantity', new DefaultValuePipe(5), ParseIntPipe) quantity: number,
+    @ReqUser() user: User,
+  ) {
+    const count = await this.productsService.getLowStockProductsCount(quantity, user);
     return { totalLowStockProducts: count };
   }
 }

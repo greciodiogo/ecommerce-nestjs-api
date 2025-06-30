@@ -266,13 +266,22 @@ export class ProductsService {
     return this.productsRepository.save(product);
   }
 
-  async getLowStockProductsCount(quantity): Promise<number> {
-    const lowStockProducts = await this.productsRepository.count({
-      where: {
-        stock: LessThan(quantity), // Usando LessThan ao invés de lt
-      },
-    });
+  async getLowStockProductsCount(quantity: number, user?: User): Promise<number> {
+    const queryBuilder = this.productsRepository.createQueryBuilder('product');
+    
+    queryBuilder.where('product.stock < :quantity', { quantity });
 
-    return lowStockProducts;
+    if (user) {
+      const shops = await this.shopsRepository.find({
+        where: { user: { id: user.id } },
+        select: ['id'],
+      });
+      const shopIds = shops.map((shop) => shop.id);
+      if (shopIds.length > 0) {
+        queryBuilder.andWhere('product.shopId IN (:...shopIds)', { shopIds });
+      }
+    }
+
+    return queryBuilder.getCount();
   }
 }
