@@ -48,7 +48,7 @@ export class NotificationsController {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return this.notificationsService.findAllNotificationsByUserId(user.id);
+    return this.notificationsService.findAllNotificationsByUserId(user.id, false);
   }
 
   @Get('/users/:id')
@@ -59,7 +59,7 @@ export class NotificationsController {
   async findAllNotificationsByUserId(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Notification[]> {
-    return this.notificationsService.findAllNotificationsByUserId(id);
+    return this.notificationsService.findAllNotificationsByUserId(id, false);
   }
 
   // @Get('/users/:id')

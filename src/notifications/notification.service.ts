@@ -32,9 +32,12 @@ export class NotificationsService {
     return notification;
   }
 
-  async findAllNotificationsByUserId(userId: number): Promise<Notification[] | null> {
+  async findAllNotificationsByUserId(userId: number, withRead?: boolean): Promise<Notification[] | null> {
     const notification = this.notificationsRepository.find({
-      where: { user: { id: userId } },
+      where: { 
+        user: { id: userId },
+        isRead: !withRead ? false : undefined 
+      },
       order: { createdAt: 'DESC' },
     });
     if (!notification) {
@@ -43,11 +46,12 @@ export class NotificationsService {
     return notification;
   }
 
-  async findNotificationByUserId(notificationId: number, userId: number): Promise<Notification | null> {
+  async findNotificationByUserId(notificationId: number, userId: number, withRead?: boolean): Promise<Notification | null> {
     const notification = this.notificationsRepository.findOne({
       where: {
         user: { id: userId },
-        id: notificationId
+        id: notificationId,
+        isRead: !withRead ? false : undefined
       },
       order: { createdAt: 'DESC' },
     });
