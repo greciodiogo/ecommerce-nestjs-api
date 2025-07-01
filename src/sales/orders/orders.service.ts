@@ -21,6 +21,7 @@ import moment from 'moment';
 import { NotificationsService } from 'src/notifications/notification.service';
 import { Shop } from 'src/catalog/shops/models/shop.entity';
 import { OrderFilterDto } from './dto/order-filter.dto';
+import { Address } from '../../address/models/address.entity';
 
 const today = new Date();
 const dayOfWeek = today.getDay(); // 0 (domingo) a 6 (sábado)
@@ -281,6 +282,20 @@ export class OrdersService {
     Object.assign(delivery, orderData.delivery);
     order.delivery = delivery;
     order.delivery.method = deliveryMethod;
+
+    // Address logic
+    let addressPrice: number | undefined = undefined;
+    if (orderData.delivery.addressId) {
+      const addressRepo = this.ordersRepository.manager.getRepository(Address);
+      const address = await addressRepo.findOne({ where: { id: orderData.delivery.addressId } });
+      if (address) {
+        delivery.addressEntity = address;
+        addressPrice = address.price ?? undefined;
+      }
+    }
+    // Set delivery price: address price if exists, else delivery method price
+    delivery.price = addressPrice !== undefined ? addressPrice : deliveryMethod.price;
+
     const paymentMethod = await this.paymentMethodsService.getMethod(
       orderData.payment.methodId,
     );
@@ -302,9 +317,29 @@ export class OrdersService {
     // 3. Segundo save (agora com order_number)
     savedOrder = await this.ordersRepository.save(savedOrder);
 
+    // Calculate totals
+    const itemsTotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const deliveryPrice = delivery.price ?? 0;
+    const finalTotal = itemsTotal + deliveryPrice;
+
+    // Helper to format as currency
+    const formatKz = (value: number) => `${value.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kz`;
+
+    // Prepare formatted items
+    const formattedItems = order.items.map(item => ({
+      ...item,
+      price: formatKz(item.price),
+      total: formatKz(item.price * item.quantity),
+      product: item.product,
+      quantity: item.quantity,
+    }));
+
     const orderForEmail = {
       ...savedOrder,
-      roundedTotal,
+      items: formattedItems,
+      itemsTotal: formatKz(itemsTotal),
+      deliveryPrice: formatKz(deliveryPrice),
+      finalTotal: formatKz(finalTotal),
       createdFormatted: moment(savedOrder.created).format('DD/MM/YYYY [às] HH:mm'),
     };
 

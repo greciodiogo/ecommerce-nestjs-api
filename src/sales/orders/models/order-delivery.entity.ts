@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { DeliveryMethod } from '../../delivery-methods/models/delivery-method.entity';
+import { Address } from '../../../address/models/address.entity';
 
 @Entity('order_deliveries')
 export class OrderDelivery {
@@ -40,4 +41,10 @@ export class OrderDelivery {
 
   @Column()
   country: string;
+
+  @ManyToOne(() => Address, { nullable: true, eager: true, onDelete: 'SET NULL' })
+  addressEntity?: Address;
+
+  @Column({ type: 'double precision', nullable: true })
+  price?: number;
 }

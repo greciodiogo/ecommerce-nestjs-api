@@ -32,4 +32,8 @@ export class OrderDeliveryDto {
   @IsNotEmpty()
   @IsISO31661Alpha2()
   country: string;
+
+  @IsOptional()
+  @IsInt()
+  addressId?: number;
 }
