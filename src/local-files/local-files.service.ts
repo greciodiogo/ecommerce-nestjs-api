@@ -37,18 +37,20 @@ export class LocalFilesService {
   }
 
   async savePhoto(file: FileDTO): Promise<{ path: string; mimeType: string }> {
-    const extension = file.originalname.split('.').pop();
-    const safeName = file.originalname
-      .replace(/\.[^/.]+$/, '')
-      .replace(/\s+/g, '-');
+    const extension = 'jpg';
+    const safeName = file.originalname.replace(/\.[^/.]+$/, '').replace(/\s+/g, '-');
     const filePath = `uploads/${Date.now()}-${safeName}.${extension}`;
 
-    const uint8Array = new Uint8Array(file.buffer); // <- CONVERSÃO IMPORTANTE
+    // Convert to high-quality JPEG
+    const jpegBuffer = await sharp(file.buffer)
+      .flatten({ background: '#ffffff' })
+      .jpeg({ quality: 100, mozjpeg: true })
+      .toBuffer();
 
     const { error } = await this.supabase.storage
       .from(this.getBucket())
-      .upload(filePath, uint8Array, {
-        contentType: file.mimetype,
+      .upload(filePath, jpegBuffer, {
+        contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: true,
       });
@@ -57,7 +59,7 @@ export class LocalFilesService {
       throw new Error(`Upload failed: ${error.message}`);
     }
 
-    return { path: filePath, mimeType: file.mimetype };
+    return { path: filePath, mimeType: 'image/jpeg' };
   }
 
 
