@@ -25,6 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { SendVerificationCodeDto } from './dto/verificationCode.dto';
+import { OAuth2Client } from 'google-auth-library';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -97,5 +98,21 @@ export class AuthController {
     req.logOut(() => {
       req.session.cookie.maxAge = 0;
     });
+  }
+
+  @Post('google')
+  async googleLogin(@Body('idToken') idToken: string, @Req() req: Request, @Res() res: Response) {
+    try {
+      // @ts-ignore: googleLogin is implemented in AuthService
+      const user = await this.authService.googleLogin(idToken);
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        return res.json({ message: 'Logged in with Google', user });
+      });
+    } catch (e) {
+      return res.status(401).json({ message: 'Invalid Google token', error: e?.message });
+    }
   }
 }

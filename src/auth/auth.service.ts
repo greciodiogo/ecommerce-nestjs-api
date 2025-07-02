@@ -9,6 +9,8 @@ import { Role } from '../users/models/role.enum';
 import { SendVerificationCodeDto } from './dto/verificationCode.dto';
 import { CodesService } from './../codes/codes.service';
 import { ConflictError } from '../errors/conflict.error';
+import { OAuth2Client } from 'google-auth-library';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -72,5 +74,31 @@ export class AuthService implements OnModuleInit {
     }
     const { password, ...toReturn } = user;
     return toReturn as User;
+  }
+
+  async googleLogin(idToken: string): Promise<User> {
+    const client = new OAuth2Client();
+    const googleClientId = this.config.get('google.clientId');
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: googleClientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.email) {
+      throw new Error('No email in Google token');
+    }
+    let user = await this.usersService.findUserByEmail(payload.email);
+    if (!user) {
+      // Generate a random password for Google users
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      user = await this.usersService.addUser(
+        payload.email,
+        await argon2.hash(randomPassword),
+        payload.given_name,
+        payload.family_name,
+        Role.Customer
+      );
+    }
+    return user;
   }
 }

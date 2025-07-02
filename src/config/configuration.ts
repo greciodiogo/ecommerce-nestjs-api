@@ -34,4 +34,7 @@ export default () => ({
     key: process.env.SUPABASE_KEY,
     bucket: process.env.SUPABASE_BUCKET,
   },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+  },
 });
