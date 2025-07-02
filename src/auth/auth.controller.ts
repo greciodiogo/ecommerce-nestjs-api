@@ -26,12 +26,14 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { SendVerificationCodeDto } from './dto/verificationCode.dto';
 import { OAuth2Client } from 'google-auth-library';
+import { UsersService } from 'src/users/users.service';
 
 @ApiTags('auth')
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, 
+      private usersService: UsersService) {}
 
   @Post('register')
   @ApiCreatedResponse({ type: User, description: 'Registered user' })
@@ -53,22 +55,8 @@ export class AuthController {
   @ApiCreatedResponse({ type: SendVerificationCodeDto, description: 'Send Verification Code to User' })
   @ApiBadRequestResponse({ description: 'Invalid Email' })
   @ApiConflictResponse({ description: 'User with given email does not exists' })
-  async verifyCode(@Body() codeDto: SendVerificationCodeDto, @Req() req: Request, @Res() res: Response) {
-    // First, verify the code
-    const verificationResult = await this.authService.verifyCode(codeDto);
-    // Find the user after verification
-    const user = await this.authService['usersService'].findUserByEmail(codeDto.email);
-    if (!user) {
-      return res.status(400).json({ message: 'User not found after verification' });
-    }
-    // Auto-login the user
-    req.login(user, (err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Login failed' });
-      }
-      // Now the session cookie is set!
-      return res.json({ message: 'Verified and logged in', user });
-    });
+  async verifyCode(@Body() codeDto: SendVerificationCodeDto): Promise<SendVerificationCodeDto> {
+   return this.authService.verifyCode(codeDto);
   }
 
   @UseGuards(LocalAuthGuard)
