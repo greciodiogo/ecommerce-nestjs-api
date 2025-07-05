@@ -30,6 +30,7 @@ import { DashboardModule } from './utilitarios/dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notification.module';
 import { AddressModule } from './address/address.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { OperationLogsModule } from './operation-logs/operation-logs.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { FeedbackModule } from './feedback/feedback.module';
     NotificationsModule,
     AddressModule,
     FeedbackModule,
+    OperationLogsModule,
   ],
   controllers: [],
   providers: [
