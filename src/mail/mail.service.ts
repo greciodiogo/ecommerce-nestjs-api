@@ -92,4 +92,20 @@ export class MailService {
       console.error('Erro ao enviar e-mail de feedback:', err);
     }
   }
+
+  async sendMailWithAttachment({ to, subject, text, attachments }: { to: string, subject: string, text: string, attachments: any[] }) {
+    const mailOptions = {
+      from: this.configService.get<string>('email.user'),
+      to,
+      subject,
+      text,
+      attachments,
+    };
+    try {
+      await this.emailTransport().sendMail(mailOptions);
+      return { message: 'Email with attachment sent.' };
+    } catch (err) {
+      console.error('Erro ao enviar e-mail com anexo:', err);
+    }
+  }
 }

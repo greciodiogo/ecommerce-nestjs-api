@@ -31,6 +31,7 @@ import { NotificationsModule } from './notifications/notification.module';
 import { AddressModule } from './address/address.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { OperationLogsModule } from './operation-logs/operation-logs.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { OperationLogsModule } from './operation-logs/operation-logs.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     RedisModule,
     AuthModule,
     UsersModule,

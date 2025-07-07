@@ -3,6 +3,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { RedocModule } from 'nestjs-redoc';
+import * as crypto from 'crypto';
+if (!(global as any).crypto) {
+  (global as any).crypto = crypto;
+}
+if (!(global as any).crypto.randomUUID) {
+  (global as any).crypto.randomUUID = () => crypto.randomBytes(16).toString('hex');
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -4,16 +4,23 @@ import { OperationLog } from './models/operation-log.entity';
 import { OperationLogsService } from './operation-logs.service';
 import { OperationLogInterceptor } from './operation-log.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OperationLogsReportService } from './operation-logs-report.service';
+import { UsersModule } from '../users/users.module';
+import { MailModule } from '../mail/mail.module';
+import { OperationLogsReportController } from './operation-logs-report.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OperationLog])],
+  imports: [TypeOrmModule.forFeature([OperationLog]), ScheduleModule, UsersModule, MailModule],
   providers: [
     OperationLogsService,
+    OperationLogsReportService,
     {
       provide: APP_INTERCEPTOR,
       useClass: OperationLogInterceptor,
     },
   ],
   exports: [OperationLogsService],
+  controllers: [OperationLogsReportController],
 })
 export class OperationLogsModule {} 
