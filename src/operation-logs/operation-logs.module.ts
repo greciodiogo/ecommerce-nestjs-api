@@ -9,6 +9,7 @@ import { OperationLogsReportService } from './operation-logs-report.service';
 import { UsersModule } from '../users/users.module';
 import { MailModule } from '../mail/mail.module';
 import { OperationLogsReportController } from './operation-logs-report.controller';
+import { OperationLogController } from './operation-log.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OperationLog]), ScheduleModule, UsersModule, MailModule],
@@ -21,6 +22,6 @@ import { OperationLogsReportController } from './operation-logs-report.controlle
     },
   ],
   exports: [OperationLogsService],
-  controllers: [OperationLogsReportController],
+  controllers: [OperationLogsReportController, OperationLogController],
 })
 export class OperationLogsModule {} 
