@@ -19,7 +19,7 @@ export class OperationLogsReportService {
     private readonly mailService: MailService,
   ) {}
 
-  @Cron('0 1 * * 1') // Every Monday at 1am
+  @Cron('0 21 * * *') // Every day at 9 p.m.
   async sendWeeklyReport() {
     this.logger.log('Generating weekly operation logs report...');
     // 1. Fetch admin users
@@ -28,8 +28,8 @@ export class OperationLogsReportService {
     this.logger.warn('No admin users found. Skipping report.');
     return;
     }
-    // 2. Fetch last week's logs
-    const logs = await this.operationLogsService.getLogsFromLastWeek();
+    // 2. Fetch today's logs
+    const logs = await this.operationLogsService.getLogsFromToday();
     // 3. Generate PDF
     const pdfBuffer = await this.generatePdf(logs);
     // 4. Send email to each admin
@@ -67,21 +67,14 @@ export class OperationLogsReportService {
     y += 28;
     doc.setFontSize(16);
     doc.setTextColor(33, 94, 191);
-    doc.text('Weekly Operation Logs Report', pageWidth / 2, y, { align: 'center' });
+    doc.text('Daily Operation Logs Report', pageWidth / 2, y, { align: 'center' });
     y += 8;
-    // Reporting period
+    // Reporting period (today)
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const lastMonday = new Date(now);
-    lastMonday.setDate(now.getDate() - diffToMonday - 7);
-    lastMonday.setHours(0, 0, 0, 0);
-    const lastSunday = new Date(lastMonday);
-    lastSunday.setDate(lastMonday.getDate() + 6);
-    lastSunday.setHours(23, 59, 59, 999);
+    const todayStr = now.toLocaleDateString();
     doc.setFontSize(11);
     doc.setTextColor(0);
-    doc.text(`Period: ${lastMonday.toLocaleDateString()} - ${lastSunday.toLocaleDateString()}`, 10, y);
+    doc.text(`Period: ${todayStr}`, 10, y);
     y += 6;
     doc.text(`Total logs: ${logs.length}`, 10, y);
     y += 4;
@@ -91,7 +84,6 @@ export class OperationLogsReportService {
     const userMap = new Map(users.map(u => [u.id, (u.firstName || '') + ' ' + (u.lastName || '') || u.email || 'Unknown']));
     // Table columns
     const columns = [
-      { header: 'ID', dataKey: 'id' },
       { header: 'User', dataKey: 'user' },
       { header: 'Action', dataKey: 'action' },
       { header: 'Description', dataKey: 'description' },
@@ -100,7 +92,6 @@ export class OperationLogsReportService {
     ];
     // Table rows
     const rows = logs.map(log => ({
-      id: log.id,
       user: userMap.get(log.userId) || 'Unknown',
       action: log.action,
       description: log.description || '',
