@@ -31,7 +31,7 @@ export class OperationLogsReportService {
     // 2. Fetch last week's logs
     const logs = await this.operationLogsService.getLogsFromLastWeek();
     // 3. Generate PDF
-    const pdfBuffer = this.generatePdf(logs);
+    const pdfBuffer = await this.generatePdf(logs);
     // 4. Send email to each admin
     for (const admin of admins) {
       await this.mailService.sendMailWithAttachment({
@@ -50,7 +50,7 @@ export class OperationLogsReportService {
     this.logger.log('Weekly operation logs report sent to all admins.');
   }
 
-  generatePdf(logs: any[]): Buffer {
+  async generatePdf(logs: any[]): Promise<Buffer> {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 10;
@@ -65,7 +65,6 @@ export class OperationLogsReportService {
       doc.text('LOGO', 10, y + 10);
     }
     y += 28;
-    // Title
     doc.setFontSize(16);
     doc.setTextColor(33, 94, 191);
     doc.text('Weekly Operation Logs Report', pageWidth / 2, y, { align: 'center' });
@@ -86,22 +85,26 @@ export class OperationLogsReportService {
     y += 6;
     doc.text(`Total logs: ${logs.length}`, 10, y);
     y += 4;
+    // Fetch user names for all logs
+    const userIds = Array.from(new Set(logs.map(l => l.userId).filter(Boolean)));
+    const users = await this.usersService.findUsersByIds(userIds);
+    const userMap = new Map(users.map(u => [u.id, (u.firstName || '') + ' ' + (u.lastName || '') || u.email || 'Unknown']));
     // Table columns
     const columns = [
       { header: 'ID', dataKey: 'id' },
-      { header: 'UserID', dataKey: 'userId' },
+      { header: 'User', dataKey: 'user' },
       { header: 'Action', dataKey: 'action' },
+      { header: 'Description', dataKey: 'description' },
       { header: 'Entity', dataKey: 'entity' },
-      { header: 'EntityID', dataKey: 'entityId' },
       { header: 'Timestamp', dataKey: 'timestamp' },
     ];
     // Table rows
     const rows = logs.map(log => ({
       id: log.id,
-      userId: log.userId,
+      user: userMap.get(log.userId) || 'Unknown',
       action: log.action,
+      description: log.description || '',
       entity: log.entity,
-      entityId: log.entityId || '',
       timestamp: new Date(log.timestamp).toLocaleString(),
     }));
     // Add table

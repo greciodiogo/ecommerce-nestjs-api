@@ -74,6 +74,11 @@ export class UsersService {
     });
   }
 
+  async findUsersByIds(ids: number[]): Promise<User[]> {
+    if (!ids.length) return [];
+    return this.usersRepository.find({ where: ids.map(id => ({ id })) });
+  }
+
   async getUsers(roleFilter?: 'customers' | 'sales' | 'exclude-customers'): Promise<User[]> {
   const where: any = {};
 

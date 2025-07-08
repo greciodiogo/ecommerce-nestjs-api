@@ -10,6 +10,20 @@ export class OperationLogsService {
     private readonly operationLogsRepository: Repository<OperationLog>,
   ) {}
 
+  private generateDescription(params: { action: string; entity: string; entityId?: string; details?: any }): string {
+    const { action, entity, entityId } = params;
+    if (action === 'create' && entity === 'auth') return 'user authentication';
+    if (action === 'create' && entity === 'products') return 'product creation';
+    if (action === 'update' && entity === 'products' && entityId) return `update product #${entityId}`;
+    if (action === 'update' && entity === 'categories' && entityId) return `update #${entityId} in categories`;
+    if (action === 'delete' && entity === 'categories' && entityId) return `delete #${entityId} in categories`;
+    // General fallback for any action/entity/entityId
+    if (action && entity && entityId) return `${action} ${entity} #${entityId}`;
+    if (action && entity) return `${action} ${entity}`;
+    if (action) return action;
+    return '';
+  }
+
   async logOperation(params: {
     userId: number;
     action: string;
@@ -20,6 +34,7 @@ export class OperationLogsService {
     const log = this.operationLogsRepository.create({
       ...params,
       timestamp: new Date(),
+      description: this.generateDescription(params),
     });
     return this.operationLogsRepository.save(log);
   }

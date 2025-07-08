@@ -17,6 +17,9 @@ export class OperationLog {
   @Column({ nullable: true })
   entityId: string;
 
+  @Column({ nullable: true })
+  description?: string;
+
   @Column({ type: 'json', nullable: true })
   details: any;
 
