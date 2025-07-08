@@ -42,6 +42,7 @@
     "joi": "^17.7.0",
     "json2csv": "^5.0.7",
     "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
     "mime-types": "^2.1.35",
     "moment": "^2.30.1",

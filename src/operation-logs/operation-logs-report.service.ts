@@ -5,6 +5,9 @@ import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { jsPDF } from 'jspdf';
 import { Role } from '../users/models/role.enum';
+import * as fs from 'fs';
+import * as path from 'path';
+import autoTable from 'jspdf-autotable';
 
 @Injectable()
 export class OperationLogsReportService {
@@ -49,29 +52,76 @@ export class OperationLogsReportService {
 
   generatePdf(logs: any[]): Buffer {
     const doc = new jsPDF();
-    doc.setFontSize(12);
-    doc.text('Weekly Operation Logs Report', 10, 10);
-    const headers = ['ID', 'UserID', 'Action', 'Entity', 'EntityID', 'Timestamp'];
-    let y = 20;
-    doc.text(headers.join(' | '), 10, y);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 10;
+    // Add logo
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+      const logoData = fs.readFileSync(logoPath);
+      const logoBase64 = logoData.toString('base64');
+      doc.addImage('data:image/png;base64,' + logoBase64, 'PNG', 10, y, 30, 20);
+    } catch (e) {
+      doc.setFontSize(10);
+      doc.text('LOGO', 10, y + 10);
+    }
+    y += 28;
+    // Title
+    doc.setFontSize(16);
+    doc.setTextColor(33, 94, 191);
+    doc.text('Weekly Operation Logs Report', pageWidth / 2, y, { align: 'center' });
     y += 8;
-    logs.forEach(log => {
-      const row = [
-        log.id,
-        log.userId,
-        log.action,
-        log.entity,
-        log.entityId || '',
-        new Date(log.timestamp).toLocaleString(),
-      ].join(' | ');
-      doc.text(row, 10, y);
-      y += 8;
-      if (y > 270) {
-        doc.addPage();
-        y = 10;
-      }
+    // Reporting period
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const lastMonday = new Date(now);
+    lastMonday.setDate(now.getDate() - diffToMonday - 7);
+    lastMonday.setHours(0, 0, 0, 0);
+    const lastSunday = new Date(lastMonday);
+    lastSunday.setDate(lastMonday.getDate() + 6);
+    lastSunday.setHours(23, 59, 59, 999);
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.text(`Period: ${lastMonday.toLocaleDateString()} - ${lastSunday.toLocaleDateString()}`, 10, y);
+    y += 6;
+    doc.text(`Total logs: ${logs.length}`, 10, y);
+    y += 4;
+    // Table columns
+    const columns = [
+      { header: 'ID', dataKey: 'id' },
+      { header: 'UserID', dataKey: 'userId' },
+      { header: 'Action', dataKey: 'action' },
+      { header: 'Entity', dataKey: 'entity' },
+      { header: 'EntityID', dataKey: 'entityId' },
+      { header: 'Timestamp', dataKey: 'timestamp' },
+    ];
+    // Table rows
+    const rows = logs.map(log => ({
+      id: log.id,
+      userId: log.userId,
+      action: log.action,
+      entity: log.entity,
+      entityId: log.entityId || '',
+      timestamp: new Date(log.timestamp).toLocaleString(),
+    }));
+    // Add table
+    autoTable(doc, {
+      head: [columns.map(col => col.header)],
+      body: rows.map(row => columns.map(col => row[col.dataKey])),
+      startY: y + 6,
+      theme: 'grid',
+      headStyles: { fillColor: [33, 94, 191], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 10, halign: 'center' },
+      margin: { left: 10, right: 10 },
+      didDrawPage: (data) => {
+        // Footer with page number and generation date
+        const pageCount = doc.getNumberOfPages();
+        const str = 'Page ' + data.pageNumber + ' of ' + pageCount;
+        doc.setFontSize(9);
+        doc.text(str, pageWidth - 30, doc.internal.pageSize.getHeight() - 8);
+        doc.text('Generated: ' + now.toLocaleString(), 10, doc.internal.pageSize.getHeight() - 8);
+      },
     });
-    // Return as Buffer for nodemailer
     return Buffer.from(doc.output('arraybuffer'));
   }
 } 

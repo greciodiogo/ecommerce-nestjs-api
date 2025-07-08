@@ -45,6 +45,7 @@ export class LocalFilesService {
     const jpegBuffer = await sharp(file.buffer)
       .flatten({ background: '#ffffff' })
       .jpeg({ quality: 100, mozjpeg: true })
+      .rotate() // auto-rotate based on EXIF
       .toBuffer();
 
     const { error } = await this.supabase.storage
