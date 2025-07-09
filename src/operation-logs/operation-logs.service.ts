@@ -65,4 +65,8 @@ export class OperationLogsService {
       order: { timestamp: 'ASC' },
     });
   }
+
+  async getAllLogs(): Promise<OperationLog[]> {
+    return this.operationLogsRepository.find({ order: { timestamp: 'DESC' } });
+  }
 } 

@@ -14,7 +14,7 @@ export class OperationLogController {
   @ApiOperation({ summary: 'Get all operation logs' })
   @ApiOkResponse({ description: 'List of all operation logs' })
   async getAll() {
-    return this.logsService['operationLogsRepository'].find({ order: { timestamp: 'DESC' } });
+    return this.logsService.getAllLogs();
   }
 
   @Get(':id')
