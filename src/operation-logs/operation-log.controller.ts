@@ -3,18 +3,29 @@ import { OperationLogsService } from './operation-logs.service';
 import { ApiTags, ApiOkResponse, ApiNotFoundResponse, ApiOperation, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/models/role.enum';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('operation-logs')
 @ApiBearerAuth()
 @Controller('operation-logs')
 export class OperationLogController {
-  constructor(private readonly logsService: OperationLogsService) {}
+  constructor(
+    private readonly logsService: OperationLogsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all operation logs' })
   @ApiOkResponse({ description: 'List of all operation logs' })
   async getAll() {
-    return this.logsService.getAllLogs();
+    const logs = await this.logsService.getAllLogs();
+    const userIds = Array.from(new Set(logs.map(l => l.userId).filter(Boolean)));
+    const users = await this.usersService.findUsersByIds(userIds);
+    const userMap = new Map(users.map(u => [u.id, (u.firstName || '') + ' ' + (u.lastName || '') || u.email || 'Unknown']));
+    return logs.map(log => ({
+      ...log,
+      userName: userMap.get(log.userId) || 'Unknown',
+    }));
   }
 
   @Get(':id')
@@ -22,7 +33,14 @@ export class OperationLogController {
   @ApiOkResponse({ description: 'Operation log found' })
   @ApiNotFoundResponse({ description: 'Operation log not found' })
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.logsService['operationLogsRepository'].findOne({ where: { id } });
+    const log = await this.logsService['operationLogsRepository'].findOne({ where: { id } });
+    if (!log) return null;
+    let userName = 'Unknown';
+    if (log.userId) {
+      const user = await this.usersService.getUser(log.userId).catch(() => null);
+      if (user) userName = (user.firstName || '') + ' ' + (user.lastName || '') || user.email || 'Unknown';
+    }
+    return { ...log, userName };
   }
 
   @Delete(':id')
