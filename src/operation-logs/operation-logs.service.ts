@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, Not } from 'typeorm';
 import { OperationLog } from './models/operation-log.entity';
 
 @Injectable()
@@ -12,6 +12,8 @@ export class OperationLogsService {
 
   private generateDescription(params: { action: string; entity: string; entityId?: string; details?: any }): string {
     const { action, entity, entityId } = params;
+    if (action === 'log in' && entity === 'auth') return 'user accessed system';
+    if (action === 'log out' && entity === 'auth') return 'user leaved system';
     if (action === 'create' && entity === 'auth') return 'user authentication';
     if (action === 'create' && entity === 'products') return 'product creation';
     if (action === 'update' && entity === 'products' && entityId) return `update product #${entityId}`;
@@ -31,10 +33,29 @@ export class OperationLogsService {
     entityId?: string;
     details?: any;
   }): Promise<OperationLog> {
+    let { action, entity, entityId, details } = params;
+    let description: string | undefined;
+    const entityNorm = entity ? entity.toLowerCase() : '';
+    // Detect log in/log out with refined logic
+    if (action === 'create' && entityNorm === 'auth' && !entityId) {
+      if (details && typeof details === 'object' && details.body && typeof details.body === 'object' && Object.keys(details.body).length === 0) {
+        // Log out
+        action = 'log out';
+        entity = 'auth';
+        description = 'user leaved system';
+      } else {
+        // Log in
+        action = 'log in';
+        entity = 'auth';
+        description = 'user accessed system';
+      }
+    }
     const log = this.operationLogsRepository.create({
       ...params,
+      action,
+      entity,
       timestamp: new Date(),
-      description: this.generateDescription(params),
+      description: description || this.generateDescription({ action, entity, entityId, details }),
     });
     return this.operationLogsRepository.save(log);
   }
@@ -67,6 +88,14 @@ export class OperationLogsService {
   }
 
   async getAllLogs(): Promise<OperationLog[]> {
-    return this.operationLogsRepository.find({ order: { timestamp: 'DESC' } });
+    // Exclude log in/log out for auth entity
+    return this.operationLogsRepository.find({
+      where: [
+        { action: Not('log in'), entity: 'auth' },
+        { action: Not('log out'), entity: 'auth' },
+        { entity: Not('auth') },
+      ],
+      order: { timestamp: 'DESC' },
+    });
   }
 } 
