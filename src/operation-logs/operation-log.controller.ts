@@ -44,32 +44,27 @@ export class OperationLogController {
   }
 
   @Get('users/session')
-  @ApiOperation({ summary: 'Get all user session logs (raw create Auth events)' })
-  @ApiOkResponse({ description: 'List of all user session logs (raw)' })
+  @ApiOperation({ summary: 'Get all user session logs (log in/log out)' })
+  @ApiOkResponse({ description: 'List of all user session logs' })
   async getUserSessions() {
     const logs = await this.logsService['operationLogsRepository'].find({
-      where: {
-        entity: 'Auth',
-        action: 'create',
-        entityId: null,
-      },
+      where: [
+        { action: 'log in', entity: 'auth' },
+        { action: 'log out', entity: 'auth' },
+      ],
       order: { timestamp: 'DESC' },
     });
     const userIds = Array.from(new Set(logs.map(l => l.userId).filter(Boolean)));
     const users = await this.usersService.findUsersByIds(userIds);
     const userMap = new Map(users.map(u => [u.id, (u.firstName || '') + ' ' + (u.lastName || '') || u.email || 'Unknown']));
     return logs.map(log => {
-      let action = 'log in';
-      let description = 'user accessed system';
-      if (
-        log.details &&
-        typeof log.details === 'object' &&
-        log.details.body &&
-        typeof log.details.body === 'object' &&
-        Object.keys(log.details.body).length === 0 &&
-        log.details.params
-      ) {
-        action = 'log out';
+      let action = log.action;
+      let description = log.description;
+      if (log.action === 'log in') {
+        action = 'logged in';
+        description = 'user accessed system';
+      } else if (log.action === 'log out') {
+        action = 'logged out';
         description = 'user leaved system';
       }
       return {

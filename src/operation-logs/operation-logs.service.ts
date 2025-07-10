@@ -88,14 +88,16 @@ export class OperationLogsService {
   }
 
   async getAllLogs(): Promise<OperationLog[]> {
-    // Exclude log in/log out for auth entity
-    return this.operationLogsRepository.find({
-      where: [
-        { action: Not('log in'), entity: 'auth' },
-        { action: Not('log out'), entity: 'auth' },
-        { entity: Not('auth') },
-      ],
-      order: { timestamp: 'DESC' },
-    });
+    // Exclude logs where entity = 'Auth', action = 'create', and entityId IS NULL
+    // and also exclude logs where action is 'log in' or 'log out'
+    return this.operationLogsRepository
+      .createQueryBuilder('log')
+      .where('NOT (log.entity = :entity AND log.action = :action AND log.entityId IS NULL)', {
+        entity: 'Auth',
+        action: 'create',
+      })
+      .andWhere('log.action != :login AND log.action != :logout', { login: 'log in', logout: 'log out' })
+      .orderBy('log.timestamp', 'DESC')
+      .getMany();
   }
 } 
