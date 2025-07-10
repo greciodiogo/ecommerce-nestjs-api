@@ -81,9 +81,10 @@ export class OperationLogsService {
     const today = new Date();
     const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-    return this.operationLogsRepository.find({
-      where: { timestamp: Between(start, end) },
-      order: { timestamp: 'ASC' },
+    const allLogs = await this.getAllLogs();
+    return allLogs.filter(log => {
+      const ts = new Date(log.timestamp).getTime();
+      return ts >= start.getTime() && ts <= end.getTime();
     });
   }
 
