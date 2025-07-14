@@ -20,6 +20,13 @@ export class OperationLogInterceptor implements NestInterceptor {
     const entityId = request.params?.id || undefined;
     const action = this.mapMethodToAction(method);
 
+    // Exclude ProductPhotosController.addProductPhoto
+    const controller = context.getClass().name;
+    const handler = context.getHandler().name;
+    if (controller === 'ProductPhotosController' && handler === 'addProductPhoto') {
+      return next.handle();
+    }
+
     if (!user || !action || !entity) {
       return next.handle();
     }
