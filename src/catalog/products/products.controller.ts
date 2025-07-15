@@ -116,6 +116,13 @@ export class ProductsController {
     return await this.productsService.updateProductAttributes(id, attributes);
   }
 
+  @Get('/by-shop/:shopId')
+  @ApiOkResponse({ type: [Product], description: 'List of products by shop id' })
+  @ApiNotFoundResponse({ description: 'No products found for this shop' })
+  async getProductsByShopId(@Param('shopId', ParseIntPipe) shopId: number): Promise<Product[]> {
+    return this.productsService.getProductsByShopId(shopId);
+  }
+
   
   @Get('/dashboard/low-stock')
   async getLowStockProductsCount(

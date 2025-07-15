@@ -96,6 +96,14 @@ export class ProductsService {
     return products;
   }
 
+  async getProductsByShopId(shopId: number): Promise<Product[]> {
+    return this.productsRepository.find({
+      where: { shop: { id: shopId } },
+      relations: ['shop', 'attributes', 'photos'],
+      order: { updated: 'DESC' },
+    });
+  }
+
   async getProduct(id: number, withHidden = false, user?: User): Promise<Product> {
     const whereCondition: any = { id };
   
