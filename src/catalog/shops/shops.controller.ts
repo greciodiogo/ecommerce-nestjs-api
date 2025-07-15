@@ -51,6 +51,13 @@ export class ShopsController {
     return this.shopsService.getShops();
   }
 
+  @Get(':id')
+  @ApiOkResponse({ type: Shop, description: 'Shop by id' })
+  @ApiNotFoundResponse({ description: 'Shop not found' })
+  async getShopById(@Param('id', ParseIntPipe) id: number): Promise<Shop> {
+    return this.shopsService.getShop(id);
+  }
+
   @Patch('/:id')
   // @Roles(Role.Admin, Role.Manager, Role.Sales)
   @ApiBadRequestResponse({ description: 'Invalid shop data' })
