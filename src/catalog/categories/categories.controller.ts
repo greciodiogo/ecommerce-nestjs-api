@@ -7,6 +7,8 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -114,6 +116,21 @@ export class CategoriesController {
       return await this.categoriesService.getCategoryProductsBySlug(slug, true);
     }
     return await this.categoriesService.getCategoryProductsBySlug(slug);
+  }
+
+  @Get('/:id/products/paginated')
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiOkResponse({ type: [Product], description: 'Paginated category products' })
+  async getCategoryProductsPaginated(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @ReqUser() user?: User,
+  ) {
+    if (user && [Role.Admin, Role.Manager, Role.Sales].includes(user?.role)) {
+      return await this.categoriesService.getCategoryProductsPaginated(id, page, limit, true);
+    }
+    return await this.categoriesService.getCategoryProductsPaginated(id, page, limit);
   }
 
   @Post('/:id/products')

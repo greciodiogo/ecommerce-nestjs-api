@@ -34,7 +34,7 @@ export class CategoriesService {
     const category = await this.categoriesRepository.findOne({
       where: { id },
       order: {
-        id: 'ASC', //g ou 'DESC' se quiser mais recentes primeiro
+        id: 'DESC', //g ou 'DESC' se quiser mas recentes primeiro
     },
       relations: [
         'parentCategory',
@@ -165,5 +165,21 @@ export class CategoriesService {
     category.products = category.products.filter((p) => p.id !== product.id);
     await this.categoriesRepository.save(category);
     return true;
+  }
+
+  async getCategoryProductsPaginated(
+    id: number,
+    page: number,
+    limit: number,
+    withHidden?: boolean,
+  ): Promise<{ data: Product[]; total: number; page: number; limit: number; totalPages: number }> {
+    const category = await this.getCategory(id, false, true);
+    let products = withHidden ? category.products : category.products.filter((product) => product.visible);
+    const total = products.length;
+    const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const data = products.slice(start, end);
+    return { data, total, page, limit, totalPages };
   }
 }
