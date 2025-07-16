@@ -305,4 +305,76 @@ export class ProductsService {
 
     return queryBuilder.getCount();
   }
+
+  async getProductsPaginated(
+    filters: ProductFilterDto,
+    user: User,
+    onlyVisible: boolean,
+    page: number,
+    limit: number,
+  ) {
+    const { id, name, shopName, minStock, maxStock, minPrice, maxPrice } = filters;
+    const queryBuilder = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.shop', 'shop')
+      .leftJoinAndSelect('product.attributes', 'attributes')
+      .leftJoinAndSelect('product.photos', 'photos');
+
+    if (id) {
+      queryBuilder.andWhere('product.id = :id', { id: +id });
+    }
+    if (name) {
+      queryBuilder.andWhere('LOWER(product.name) LIKE LOWER(:name)', { name: `%${name}%` });
+    }
+    if (shopName) {
+      queryBuilder.andWhere('LOWER(shop.shopName) LIKE LOWER(:shopName)', {
+        shopName: `%${shopName}%`,
+      });
+    }
+    if (minStock !== undefined) {
+      queryBuilder.andWhere('product.stock >= :minStock', { minStock });
+    }
+    if (maxStock !== undefined) {
+      queryBuilder.andWhere('product.stock <= :maxStock', { maxStock });
+    }
+    if (minPrice !== undefined) {
+      queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+    }
+    if (maxPrice !== undefined) {
+      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
+    }
+    if (user) {
+      const shops = await this.shopsRepository.find({
+        where: { user: { id: user.id } },
+        select: ['id'],
+      });
+      const shopIds = shops.map((shop) => shop.id);
+      if (shopIds.length > 0) {
+        queryBuilder.andWhere('product.shopId IN (:...shopIds)', { shopIds });
+      }
+    }
+    if (onlyVisible || onlyVisible === undefined) {
+      queryBuilder.andWhere('product.visible = :visible', { visible: true });
+    }
+
+    const [products, total] = await queryBuilder
+      .orderBy('product.updated', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    for (const product of products) {
+      if (product.price == null) {
+        product.price = Math.round(product.purchasePrice * 1.1);
+      }
+    }
+
+    return {
+      data: products,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

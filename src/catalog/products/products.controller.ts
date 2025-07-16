@@ -54,6 +54,22 @@ export class ProductsController {
     return this.productsService.getProducts(filters, user, onlyVisible);
   }
 
+  @Get('/paginated')
+  @ApiOkResponse({ type: [Product], description: 'Paginated list of products' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'context', required: false, type: String })
+  async getProductsPaginated(
+    @Query() filters: ProductFilterDto,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @ReqUser() user: User,
+    @Req() req: Request,
+  ) {
+    const onlyVisible = !req['isAdmin'];
+    return this.productsService.getProductsPaginated(filters, user, onlyVisible, page, limit);
+  }
+
   @Get('/:id')
   @ApiNotFoundResponse({ description: 'Product not found' })
   @ApiOkResponse({ type: Product, description: 'Product with given id' })
