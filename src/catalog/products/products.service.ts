@@ -96,6 +96,12 @@ export class ProductsService {
     return products;
   }
 
+  async getProductsByIds(ids: number[]): Promise<Product[]> {
+    return this.productsRepository.find({
+      where: { id: In(ids) },
+    });
+  }
+
   async getProductsByShopId(shopId: number): Promise<Product[]> {
     return this.productsRepository.find({
       where: { shop: { id: shopId } },

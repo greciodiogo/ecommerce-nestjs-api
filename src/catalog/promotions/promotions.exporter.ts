@@ -27,7 +27,7 @@ export class PromotionsExporter implements Exporter<Promotion> {
     preparedPromotion.endDate = promotion.endDate;
     preparedPromotion.discount = promotion.discount;
     preparedPromotion.isActive = promotion.isActive;
-    preparedPromotion.categoryIds = promotion.categories.map((category) => category.id);
+    preparedPromotion.productIds = promotion.products?.map((product) => product.id) || [];
     return preparedPromotion;
   }
 } 

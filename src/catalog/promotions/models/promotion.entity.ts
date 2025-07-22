@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../../../catalog/categories/models/category.entity';
+import { Product } from 'src/catalog/products/models/product.entity';
 
 @Entity('promotions')
 export class Promotion {
@@ -22,6 +23,9 @@ export class Promotion {
 
   @Column()
   name: string;
+
+  @Column({ unique: true })
+  slug: string;
 
   @Column({ type: 'text' })
   description: string;
@@ -38,10 +42,10 @@ export class Promotion {
   @Column({ default: true })
   isActive: boolean;
 
-  @ManyToMany(() => Category, {
+  @ManyToMany(() => Product, {
     cascade: true,
     onDelete: 'CASCADE',
   })
   @JoinTable()
-  categories: Category[];
+  products: Product[];
 } 

@@ -15,6 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { PromotionUpdateDto } from './dto/promotion-update.dto';
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -23,6 +24,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Promotion } from './models/promotion.entity';
+import { Product } from '../products/models/product.entity';
 
 @ApiTags('promotions')
 @Controller('promotions')
@@ -48,16 +50,7 @@ export class PromotionsController {
   @Get('/active')
   @ApiOkResponse({ type: [Promotion], description: 'List of active promotions' })
   async getActivePromotions(): Promise<Promotion[]> {
-    return this.promotionsService.getActivePromotions();
-  }
-
-  @Get('/category/:categoryId')
-  @ApiOkResponse({ type: [Promotion], description: 'List of promotions for a specific category' })
-  @ApiNotFoundResponse({ description: 'Category not found' })
-  async getPromotionsByCategory(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
-  ): Promise<Promotion[]> {
-    return this.promotionsService.getPromotionsByCategory(categoryId);
+    return this.promotionsService.getActivePromotions(new Date());
   }
 
   @Get('/:id')
@@ -81,16 +74,6 @@ export class PromotionsController {
     return await this.promotionsService.updatePromotion(id, body);
   }
 
-  @Patch('/:id/toggle')
-  @Roles(Role.Admin, Role.Manager)
-  @ApiNotFoundResponse({ description: 'Promotion not found' })
-  @ApiUnauthorizedResponse({ description: 'User not logged in' })
-  @ApiForbiddenResponse({ description: 'User not authorized' })
-  @ApiOkResponse({ type: Promotion, description: 'Promotion status toggled' })
-  async togglePromotionStatus(@Param('id', ParseIntPipe) id: number): Promise<Promotion> {
-    return await this.promotionsService.togglePromotionStatus(id);
-  }
-
   @Delete('/:id')
   @Roles(Role.Admin, Role.Manager)
   @ApiNotFoundResponse({ description: 'Promotion not found' })
@@ -98,6 +81,49 @@ export class PromotionsController {
   @ApiForbiddenResponse({ description: 'User not authorized' })
   @ApiOkResponse({ description: 'Promotion deleted' })
   async deletePromotion(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return await this.promotionsService.deletePromotion(id);
+    await this.promotionsService.deletePromotion(id);
+  }
+
+  @Get('/:id/products')
+  @ApiNotFoundResponse({ description: 'Promotion not found' })
+  @ApiOkResponse({ type: [Product], description: 'Promotion products' })
+  async getPromotionProducts(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<Product[]> {
+    return await this.promotionsService.getPromotionProducts(id);
+  }
+
+  @Post('/:id/products')
+  @Roles(Role.Admin, Role.Manager)
+  @ApiNotFoundResponse({ description: 'Promotion not found' })
+  @ApiCreatedResponse({
+    type: Product,
+    description: 'Product added to promotion',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        productId: { type: 'number' },
+      },
+      required: ['productId'],
+    },
+  })
+  async addPromotionProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('productId') productId: number,
+  ): Promise<Product> {
+    return await this.promotionsService.addPromotionProduct(id, productId);
+  }
+
+  @Delete('/:id/products/:productId')
+  @Roles(Role.Admin, Role.Manager)
+  @ApiNotFoundResponse({ description: 'Promotion not found' })
+  @ApiOkResponse({ description: 'Product deleted from promotion' })
+  async deletePromotionProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('productId', ParseIntPipe) productId: number,
+  ): Promise<void> {
+    await this.promotionsService.deletePromotionProduct(id, productId);
   }
 } 

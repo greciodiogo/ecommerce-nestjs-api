@@ -1,8 +1,9 @@
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
-  IsOptional,
   IsNumber,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -36,6 +37,11 @@ export class PromotionUpdateDto {
   @IsOptional()
   categoryIds?: number[];
 
+  @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsArray()
+  @IsOptional()
+  productIds?: number[];
 } 

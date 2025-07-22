@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsNotEmpty,
   IsNumber,
@@ -35,6 +36,11 @@ export class PromotionCreateDto {
   @IsNumber({}, { each: true })
   categoryIds: number[];
 
+  @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsArray()
+  @IsOptional()
+  productIds?: number[];
 } 
