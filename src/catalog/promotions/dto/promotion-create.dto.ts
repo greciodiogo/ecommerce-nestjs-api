@@ -32,10 +32,6 @@ export class PromotionCreateDto {
   @Max(100)
   discount: number;
 
-  @IsArray()
-  @IsNumber({}, { each: true })
-  categoryIds: number[];
-
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

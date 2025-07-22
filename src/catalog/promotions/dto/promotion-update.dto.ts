@@ -32,11 +32,6 @@ export class PromotionUpdateDto {
   @IsOptional()
   discount?: number;
 
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @IsOptional()
-  categoryIds?: number[];
-
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
