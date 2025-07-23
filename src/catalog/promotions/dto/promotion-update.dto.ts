@@ -16,6 +16,10 @@ export class PromotionUpdateDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @IsDateString()
