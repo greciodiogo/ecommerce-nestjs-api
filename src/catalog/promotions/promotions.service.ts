@@ -63,7 +63,18 @@ export class PromotionsService {
 
   async createPromotion(promotionData: PromotionCreateDto): Promise<Promotion> {
     const promotion = new Promotion();
-    Object.assign(promotion, promotionData);
+    
+    // Generate slug from name
+    const slug = promotionData.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    Object.assign(promotion, {
+      ...promotionData,
+      slug, // Override any provided slug with our generated one
+    });
+    
     if (promotionData.productIds) {
       promotion.products = await this.productsService.getProductsByIds(
         promotionData.productIds,

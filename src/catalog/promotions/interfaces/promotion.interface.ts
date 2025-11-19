@@ -15,7 +15,7 @@ export interface ActivePromotion {
   description: string;
   discount: number;
   endDate: Date;
-  categories: Array<{
+  products: Array<{
     id: number;
     name: string;
   }>;

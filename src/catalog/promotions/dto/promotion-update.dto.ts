@@ -16,6 +16,10 @@ export class PromotionUpdateDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @IsDateString()
@@ -31,11 +35,6 @@ export class PromotionUpdateDto {
   @Max(100)
   @IsOptional()
   discount?: number;
-
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @IsOptional()
-  categoryIds?: number[];
 
   @IsBoolean()
   @IsOptional()
