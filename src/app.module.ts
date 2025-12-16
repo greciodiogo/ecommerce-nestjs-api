@@ -50,6 +50,9 @@ import { ScheduleModule } from '@nestjs/schedule';
         username: configService.get<string>('postgres.username'),
         password: configService.get<string>('postgres.password'),
         database: configService.get<string>('postgres.database'),
+        extra: {
+          statement_timeout: 0,
+        },
         entities: [],
         synchronize: true,
         autoLoadEntities: true,
