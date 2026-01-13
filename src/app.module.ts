@@ -54,7 +54,7 @@ import { ScheduleModule } from '@nestjs/schedule';
           statement_timeout: 0,
         },
         entities: [],
-        synchronize: true,
+        synchronize: false,
         autoLoadEntities: true,
         keepConnectionAlive: true,
         dropSchema: false,
