@@ -47,21 +47,18 @@ export class LocalFilesService {
 
         if (error) {
           lastError = error;
+
+          // Don't retry on 404 - file doesn't exist (silent return, no log)
+          if (error.message?.toLowerCase().includes('not found') || 
+              error.message?.toLowerCase().includes('404')) {
+            return null; // Silent return for 404
+          }
           
-          // Only log if throttle allows (prevents log spam)
+          // Only log non-404 errors if throttle allows
           if (this.shouldLog(`download-error-${path}`)) {
             console.warn(
               `Failed to download file: ${path} (attempt ${attempt}/${maxRetries}): ${error.message}`
             );
-          }
-
-          // Don't retry on 404 - file doesn't exist
-          if (error.message?.toLowerCase().includes('not found') || 
-              error.message?.toLowerCase().includes('404')) {
-            if (this.shouldLog(`not-found-${path}`)) {
-              console.error(`File not found: ${path}`);
-            }
-            return null;
           }
 
           // Wait before retry (exponential backoff)
@@ -95,11 +92,17 @@ export class LocalFilesService {
       }
     }
 
-    // Final error log (always log this one as it's the final failure)
-    console.error(
-      `Failed to download file after ${maxRetries} attempts: ${path}`,
-      lastError instanceof Error ? lastError.message : String(lastError)
-    );
+    // Final error log (only if not 404)
+    const is404 = lastError?.message?.toLowerCase().includes('not found') || 
+                  lastError?.message?.toLowerCase().includes('404');
+    
+    if (!is404) {
+      console.error(
+        `Failed to download file after ${maxRetries} attempts: ${path}`,
+        lastError instanceof Error ? lastError.message : String(lastError)
+      );
+    }
+    
     return null;
   }
 
