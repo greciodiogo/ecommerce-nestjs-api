@@ -37,13 +37,14 @@ export class LocalFilesService {
             `Attempt ${attempt}/${maxRetries} - Failed to download file: ${path}`,
             {
               error: error.message,
-              status: error.status,
-              statusText: error.statusText,
+              errorDetails: error,
             }
           );
 
           // Don't retry on 404 - file doesn't exist
-          if (error.status === 404) {
+          // Check error message for "not found" since status might not be available
+          if (error.message?.toLowerCase().includes('not found') || 
+              error.message?.toLowerCase().includes('404')) {
             console.error(`File not found: ${path}`);
             return null;
           }
