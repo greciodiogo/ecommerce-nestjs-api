@@ -1,8 +1,6 @@
-import { Injectable, StreamableFile } from '@nestjs/common';
-import Sharp from 'sharp';
+import { Injectable } from '@nestjs/common';
 import { SettingsService } from '../settings/settings.service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Readable } from 'stream';
 import { FileDTO } from './upload.dto';
 import sharp from 'sharp';
 import { ConfigService } from '@nestjs/config';
@@ -24,16 +22,63 @@ export class LocalFilesService {
   }
 
   async getPhoto(path: string): Promise<Blob | null> {
-    const { data, error } = await this.supabase.storage
-      .from(this.getBucket())
-      .download(path);
+    const maxRetries = 3;
+    let lastError: any;
 
-    if (error || !data) {
-      console.error('Failed to download file:', error?.message);
-      return null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { data, error } = await this.supabase.storage
+          .from(this.getBucket())
+          .download(path);
+
+        if (error) {
+          lastError = error;
+          console.warn(
+            `Attempt ${attempt}/${maxRetries} - Failed to download file: ${path}`,
+            {
+              error: error.message,
+              status: error.status,
+              statusText: error.statusText,
+            }
+          );
+
+          // Don't retry on 404 - file doesn't exist
+          if (error.status === 404) {
+            console.error(`File not found: ${path}`);
+            return null;
+          }
+
+          // Wait before retry (exponential backoff)
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+        }
+
+        if (!data) {
+          console.error(`No data returned for file: ${path}`);
+          return null;
+        }
+
+        return data;
+      } catch (err) {
+        lastError = err;
+        console.error(
+          `Attempt ${attempt}/${maxRetries} - Exception downloading file: ${path}`,
+          err
+        );
+
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
     }
 
-    return data;
+    console.error(
+      `Failed to download file after ${maxRetries} attempts: ${path}`,
+      lastError
+    );
+    return null;
   }
 
   async savePhoto(file: FileDTO): Promise<{ path: string; mimeType: string }> {
