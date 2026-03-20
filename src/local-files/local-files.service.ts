@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class LocalFilesService {
   private supabase: SupabaseClient;
+  private logThrottle: Map<string, number> = new Map();
+  private readonly LOG_THROTTLE_MS = 5000; // Log same error max once per 5 seconds
 
   constructor(private settingsService: SettingsService, private readonly configService: ConfigService) {
     this.supabase = createClient(
@@ -19,6 +21,18 @@ export class LocalFilesService {
 
   private getBucket() {
     return process.env.SUPABASE_BUCKET ?? 'uploads';
+  }
+
+  private shouldLog(key: string): boolean {
+    const now = Date.now();
+    const lastLog = this.logThrottle.get(key);
+    
+    if (!lastLog || now - lastLog > this.LOG_THROTTLE_MS) {
+      this.logThrottle.set(key, now);
+      return true;
+    }
+    
+    return false;
   }
 
   async getPhoto(path: string): Promise<Blob | null> {
@@ -33,19 +47,20 @@ export class LocalFilesService {
 
         if (error) {
           lastError = error;
-          console.warn(
-            `Attempt ${attempt}/${maxRetries} - Failed to download file: ${path}`,
-            {
-              error: error.message,
-              errorDetails: error,
-            }
-          );
+          
+          // Only log if throttle allows (prevents log spam)
+          if (this.shouldLog(`download-error-${path}`)) {
+            console.warn(
+              `Failed to download file: ${path} (attempt ${attempt}/${maxRetries}): ${error.message}`
+            );
+          }
 
           // Don't retry on 404 - file doesn't exist
-          // Check error message for "not found" since status might not be available
           if (error.message?.toLowerCase().includes('not found') || 
               error.message?.toLowerCase().includes('404')) {
-            console.error(`File not found: ${path}`);
+            if (this.shouldLog(`not-found-${path}`)) {
+              console.error(`File not found: ${path}`);
+            }
             return null;
           }
 
@@ -57,17 +72,22 @@ export class LocalFilesService {
         }
 
         if (!data) {
-          console.error(`No data returned for file: ${path}`);
+          if (this.shouldLog(`no-data-${path}`)) {
+            console.error(`No data returned for file: ${path}`);
+          }
           return null;
         }
 
         return data;
       } catch (err) {
         lastError = err;
-        console.error(
-          `Attempt ${attempt}/${maxRetries} - Exception downloading file: ${path}`,
-          err
-        );
+        
+        // Only log exceptions if throttle allows
+        if (this.shouldLog(`exception-${path}`)) {
+          console.error(
+            `Exception downloading file: ${path} (attempt ${attempt}/${maxRetries}): ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
 
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -75,9 +95,10 @@ export class LocalFilesService {
       }
     }
 
+    // Final error log (always log this one as it's the final failure)
     console.error(
       `Failed to download file after ${maxRetries} attempts: ${path}`,
-      lastError
+      lastError instanceof Error ? lastError.message : String(lastError)
     );
     return null;
   }
