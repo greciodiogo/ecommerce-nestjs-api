@@ -19,6 +19,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -39,6 +40,7 @@ export class BannersController {
 
   @Get()
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'findAllBanners' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiOkResponse({ type: [Banner], description: 'List of all banners' })
@@ -47,6 +49,7 @@ export class BannersController {
   }
 
   @Get('active')
+  @ApiOperation({ operationId: 'findActiveBanners' })
   @ApiOkResponse({ type: [Banner], description: 'List of active banners' })
   async findActive() {
     return await this.bannersService.findActive();
@@ -54,6 +57,7 @@ export class BannersController {
 
   @Get(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'findOneBanner' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Banner not found' })
@@ -83,6 +87,7 @@ export class BannersController {
       },
     },
   })
+  @ApiOperation({ operationId: 'createBanner' })
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -128,6 +133,7 @@ export class BannersController {
 
   @Patch(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'updateBanner' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Banner not found' })
@@ -194,6 +200,7 @@ export class BannersController {
 
   @Delete(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'removeBanner' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Banner not found' })
@@ -204,6 +211,7 @@ export class BannersController {
 
   @Patch(':id/toggle')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'toggleBannerActive' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Banner not found' })
@@ -214,6 +222,7 @@ export class BannersController {
 
   @Put('reorder')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'reorderBanners' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiOkResponse({ type: [Banner], description: 'Banners reordered' })
@@ -223,6 +232,7 @@ export class BannersController {
 
   @Delete(':id/image/:lang')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'deleteBannerImage' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Banner not found' })
