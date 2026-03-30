@@ -170,18 +170,87 @@ export class LocalFilesService {
 
 
   async createPhotoPlaceholder(file: FileDTO): Promise<string> {
-    let extension = file.originalname.split('.').pop();
-    const filePath = `originals/${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}.${extension}`;
-    const { data, error } = await this.supabase
-      .storage
-      .from('uploads')
-      .download(filePath);
+    try {
+      // Support both AdonisJS File object and plain object
+      const originalName = file.originalname || 'photo';
+      let extension = originalName.split('.').pop() || 'png';
+      const filePath = `originals/${Date.now()}-${originalName.replace(/\.[^/.]+$/, '')}.${extension}`;
 
-    if (error || !data) throw error;
+      // Download from Supabase (if exists)
+      const { data, error } = await this.supabase.storage
+        .from(this.getBucket())
+        .download(filePath);
 
-    const buffer = file.buffer;
+      if (error || !data) {
+        // If file doesn't exist in Supabase, use the provided buffer
+        const buffer = file.buffer;
+        return `data:image/png;base64,${buffer.toString('base64')}`;
+      }
 
-    return `data:image/png;base64,${buffer.toString('base64')}`;
+      // Convert blob to buffer if needed
+      const buffer = Buffer.from(await data.arrayBuffer());
+      return `data:image/png;base64,${buffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error creating placeholder:', error);
+      // Fallback: use file buffer directly
+      const buffer = file.buffer;
+      return `data:image/png;base64,${buffer.toString('base64')}`;
+    }
+  }
+
+  /**
+   * Delete a file from Supabase storage
+   * @param path - File path in storage
+   * @returns Promise<boolean> - True if deleted successfully
+   */
+  async deletePhoto(path: string): Promise<boolean> {
+    if (!path) return false;
+
+    try {
+      const { error } = await this.supabase.storage
+        .from(this.getBucket())
+        .remove([path]);
+
+      if (error) {
+        console.error(`Failed to delete file: ${path}`, error.message);
+        return false;
+      }
+
+      console.log(`Successfully deleted file: ${path}`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting file: ${path}`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete multiple files from Supabase storage
+   * @param paths - Array of file paths
+   * @returns Promise<number> - Number of files deleted successfully
+   */
+  async deletePhotos(paths: string[]): Promise<number> {
+    if (!paths || paths.length === 0) return 0;
+
+    const validPaths = paths.filter(p => p && p.trim() !== '');
+    if (validPaths.length === 0) return 0;
+
+    try {
+      const { error } = await this.supabase.storage
+        .from(this.getBucket())
+        .remove(validPaths);
+
+      if (error) {
+        console.error('Failed to delete files:', error.message);
+        return 0;
+      }
+
+      console.log(`Successfully deleted ${validPaths.length} files`);
+      return validPaths.length;
+    } catch (error) {
+      console.error('Error deleting files:', error);
+      return 0;
+    }
   }
 
 }

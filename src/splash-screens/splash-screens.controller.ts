@@ -24,7 +24,6 @@ import { SplashScreenUpdateDto } from './dto/splash-screen-update.dto';
 import { SplashScreen } from './models/splash-screen.entity';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/models/role.enum';
-import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('splash-screens')
 @Controller('splash-screens')
@@ -41,7 +40,6 @@ export class SplashScreensController {
   }
 
   @Get('active')
-  @Public()
   @ApiOkResponse({ type: [SplashScreen], description: 'List of active splash screens' })
   async findActive() {
     return await this.splashScreensService.findActive();

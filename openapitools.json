@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.14.0",
+    "generators": {
+      "typescript-angular": {
+        "generatorName": "typescript-angular",
+        "inputSpec": "http://localhost:3000/docs-json",
+        "output": "../ecommerce-platform-angular-admin-panel-master/src/app/core/api",
+        "additionalProperties": {
+          "ngVersion": "15.0.0",
+          "npmName": "@core/api",
+          "snapshot": false,
+          "withInterfaces": true
+        }
+      }
+    }
+  }
+}

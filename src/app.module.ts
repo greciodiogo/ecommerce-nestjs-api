@@ -33,6 +33,7 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { OperationLogsModule } from './operation-logs/operation-logs.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SplashScreensModule } from './splash-screens/splash-screens.module';
+import { BannersModule } from './banners/banners.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { SplashScreensModule } from './splash-screens/splash-screens.module';
     FeedbackModule,
     OperationLogsModule,
     SplashScreensModule,
+    BannersModule,
   ],
   controllers: [],
   providers: [
