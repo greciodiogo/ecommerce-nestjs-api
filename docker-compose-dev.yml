@@ -11,9 +11,12 @@ services:
       - uploads:/usr/src/app/uploads
     environment:
       POSTGRES_HOST: database
+      # POSTGRES_HOST: caboose.proxy.rlwy.net
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ecommerce-platform
+      # POSTGRES_PASSWORD: thBxChNccOkKtJjjTFzStchXZRDXbSjI
+      # POSTGRES_DB: railway
       PORT: 80
       SESSION_SECRET: secret
       ADMIN_EMAIL: admin@test.local

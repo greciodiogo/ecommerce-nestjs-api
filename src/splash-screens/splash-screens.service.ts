@@ -5,12 +5,15 @@ import { SplashScreen } from './models/splash-screen.entity';
 import { SplashScreenCreateDto } from './dto/splash-screen-create.dto';
 import { SplashScreenUpdateDto } from './dto/splash-screen-update.dto';
 import { NotFoundError } from '../errors/not-found.error';
+import { LocalFilesService } from '../local-files/local-files.service';
+import { FileDTO } from '../local-files/upload.dto';
 
 @Injectable()
 export class SplashScreensService {
   constructor(
     @InjectRepository(SplashScreen)
     private splashScreensRepository: Repository<SplashScreen>,
+    private localFilesService: LocalFilesService,
   ) {}
 
   async findAll() {
@@ -36,21 +39,57 @@ export class SplashScreensService {
     return splashScreen;
   }
 
-  async create(data: SplashScreenCreateDto) {
+  async create(data: SplashScreenCreateDto, file?: FileDTO) {
     const splashScreen = this.splashScreensRepository.create(data);
+
+    if (file) {
+      const { path } = await this.localFilesService.savePhoto(file);
+      splashScreen.imageUrl = path;
+    }
+
     return this.splashScreensRepository.save(splashScreen);
   }
 
-  async update(id: number, data: SplashScreenUpdateDto) {
+  async update(id: number, data: SplashScreenUpdateDto, file?: FileDTO) {
     const splashScreen = await this.findOne(id);
+    const oldImageUrl = splashScreen.imageUrl;
+
     Object.assign(splashScreen, data);
+
+    if (file) {
+      const { path } = await this.localFilesService.savePhoto(file);
+      splashScreen.imageUrl = path;
+
+      // Deletar imagem antiga se existir e for diferente da nova
+      if (oldImageUrl && oldImageUrl !== path) {
+        await this.localFilesService.deletePhoto(oldImageUrl);
+      }
+    }
+
     return this.splashScreensRepository.save(splashScreen);
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    const splashScreen = await this.findOne(id);
+
+    // Deletar imagem do Supabase
+    if (splashScreen.imageUrl) {
+      await this.localFilesService.deletePhoto(splashScreen.imageUrl);
+    }
+
     await this.splashScreensRepository.delete({ id });
     return true;
+  }
+
+  async deleteImage(id: number) {
+    const splashScreen = await this.findOne(id);
+
+    if (splashScreen.imageUrl) {
+      await this.localFilesService.deletePhoto(splashScreen.imageUrl);
+      splashScreen.imageUrl = null;
+    }
+
+    return this.splashScreensRepository.save(splashScreen);
   }
 
   async reorder(ids: number[]) {
