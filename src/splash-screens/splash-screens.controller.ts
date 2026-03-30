@@ -19,6 +19,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -39,6 +40,7 @@ export class SplashScreensController {
 
   @Get()
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'findAllSplashScreens' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiOkResponse({ type: [SplashScreen], description: 'List of all splash screens' })
@@ -47,6 +49,7 @@ export class SplashScreensController {
   }
 
   @Get('active')
+  @ApiOperation({ operationId: 'findActiveSplashScreens' })
   @ApiOkResponse({ type: [SplashScreen], description: 'List of active splash screens' })
   async findActive() {
     return await this.splashScreensService.findActive();
@@ -54,6 +57,7 @@ export class SplashScreensController {
 
   @Get(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'findOneSplashScreen' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Splash screen not found' })
@@ -64,6 +68,7 @@ export class SplashScreensController {
 
   @Post()
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'createSplashScreen' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiCreatedResponse({ type: SplashScreen, description: 'Splash screen created' })
@@ -102,6 +107,7 @@ export class SplashScreensController {
 
   @Patch(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'updateSplashScreen' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Splash screen not found' })
@@ -142,6 +148,7 @@ export class SplashScreensController {
 
   @Delete(':id')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'removeSplashScreen' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Splash screen not found' })
@@ -152,6 +159,7 @@ export class SplashScreensController {
 
   @Put('reorder')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'reorderSplashScreens' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiOkResponse({ type: [SplashScreen], description: 'Splash screens reordered' })
@@ -161,6 +169,7 @@ export class SplashScreensController {
 
   @Delete(':id/image')
   @Roles(Role.Admin)
+  @ApiOperation({ operationId: 'deleteSplashScreenImage' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiForbiddenResponse({ description: 'User is not admin' })
   @ApiNotFoundResponse({ description: 'Splash screen not found' })
