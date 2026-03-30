@@ -212,6 +212,7 @@ export class OrdersService {
         'user',
         'items',
         'items.product',
+        'items.product.shop',
         'delivery',
         'payment',
         'return',
@@ -229,6 +230,7 @@ export class OrdersService {
         'user',
         'items',
         'items.product',
+        'items.product.shop',
         'delivery',
         'payment',
         'return',
@@ -246,6 +248,7 @@ export class OrdersService {
       relations: [
         'items',
         'items.product',
+        'items.product.shop',
         'delivery',
         'payment',
         'return',
