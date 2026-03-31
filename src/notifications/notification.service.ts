@@ -108,7 +108,9 @@ export class NotificationsService {
           title: notifyUser.title,
           message: notifyUser.message,
           userId: user.id,
-          type: NotificationType.SYSTEM,
+          type: notifyUser.type || NotificationType.SYSTEM,
+          relatedEntityId: notifyUser.relatedEntityId,
+          actionUrl: notifyUser.actionUrl,
         }),
       ),
     );

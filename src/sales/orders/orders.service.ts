@@ -349,21 +349,25 @@ export class OrdersService {
     // Envia o email com os dados formatados
     if (savedOrder) {
       await this.mailService.sendOrderInvoiceEmail(orderData.contactEmail, orderForEmail);
-      await this.notifySystemAdmin([Role.Admin, Role.Manager], savedOrder)
-      await this.notifyShopkeepersOnOrder(savedOrder)
+      await this.notifySystemAdmin([Role.Admin, Role.Manager], savedOrder);
+      await this.notifyShopkeepersOnOrder(savedOrder);
     }
 
     return savedOrder;
   }
 
-  public notifySystemAdmin(roles: Array<Role>, order: Order) {
-    roles.forEach((role) => {
+  async notifySystemAdmin(roles: Array<Role>, order: Order) {
+    const promises = roles.map((role) =>
       this.notificationsService.notifyUsersByRole({
-        title: `New order #${order.order_number}`,
-        message: `A new order has been placed: #${order.order_number}`,
+        title: `Novo pedido #${order.order_number}`,
+        message: `Um novo pedido foi realizado: #${order.order_number}`,
         role: role,
+        type: 'order' as any,
+        relatedEntityId: order.id,
+        actionUrl: `/sales/orders/${order.id}`,
       })
-    })
+    );
+    await Promise.all(promises);
   }
 
   async notifyShopkeepersOnOrder(order: any): Promise<any> {
