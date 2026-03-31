@@ -1,16 +1,18 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiCreatedResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiCreatedResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/users/models/role.enum';
 import { User } from 'src/users/models/user.entity';
@@ -25,60 +27,61 @@ import { NotifyUsersByRoleDto } from './dto/notify-users-role.dto';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) { }
 
-  /**
-   * Cria uma nova notificação.
-   * Ex: ao criar um pedido, pode-se invocar este endpoint.
-   */
-
   @Get()
-  @ApiOkResponse({ type: [Notification], description: 'List of all Notifications' })
-  getNotifications(@ReqUser() user?: User): Promise<Notification[]> {
-    // if(user && [Role.Admin, Role.Manager, Role.Sales].includes(user?.role)) {
-    return this.notificationsService.getNotifications(true);
-    // }
-    return this.notificationsService.getNotifications();
+  @Roles(Role.Admin, Role.Manager)
+  @ApiOperation({ summary: 'Get all notifications (Admin/Manager only)' })
+  @ApiQuery({ name: 'includeRead', required: false, type: Boolean })
+  @ApiOkResponse({ type: [Notification], description: 'List of all notifications' })
+  getNotifications(
+    @Query('includeRead') includeRead?: boolean,
+  ): Promise<Notification[]> {
+    return this.notificationsService.getNotifications(includeRead === true);
   }
 
   @Get('/me')
-  @ApiOperation({ summary: 'Buscar notificações do usuário autenticado' })
-  @ApiBadRequestResponse({ description: 'Dados inválidos fornecidos' })
-  @ApiNotFoundResponse({ description: 'Usuário ou notificações não encontrados' })
-  @ApiOkResponse({ type: [Notification], description: 'Notificações do próprio usuário' })
-  async findAllNotificationsMe(@ReqUser() user: User): Promise<Notification[]> {
+  @ApiOperation({ summary: 'Get notifications for authenticated user' })
+  @ApiQuery({ name: 'includeRead', required: false, type: Boolean })
+  @ApiOkResponse({ type: [Notification], description: 'User notifications' })
+  @ApiUnauthorizedResponse({ description: 'User not authenticated' })
+  async findAllNotificationsMe(
+    @ReqUser() user: User,
+    @Query('includeRead') includeRead?: boolean,
+  ): Promise<Notification[]> {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return this.notificationsService.findAllNotificationsByUserId(user.id, false);
+    return this.notificationsService.findAllNotificationsByUserId(user.id, includeRead === true);
+  }
+
+  @Get('/me/unread-count')
+  @ApiOperation({ summary: 'Get unread notifications count for authenticated user' })
+  @ApiOkResponse({ description: 'Unread notifications count' })
+  async getUnreadCount(@ReqUser() user: User): Promise<{ count: number }> {
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    const count = await this.notificationsService.getUnreadCount(user.id);
+    return { count };
   }
 
   @Get('/users/:id')
-  @ApiOperation({ summary: 'Buscar notificações por ID de usuário' })
-  @ApiOkResponse({ type: [Notification], description: 'Lista de notificações por usuário' })
-  @ApiBadRequestResponse({ description: 'Dados inválidos fornecidos' })
-  @ApiNotFoundResponse({ description: 'Usuário ou notificações não encontrados' })
+  @Roles(Role.Admin, Role.Manager)
+  @ApiOperation({ summary: 'Get notifications by user ID (Admin/Manager only)' })
+  @ApiQuery({ name: 'includeRead', required: false, type: Boolean })
+  @ApiOkResponse({ type: [Notification], description: 'User notifications' })
+  @ApiNotFoundResponse({ description: 'User or notifications not found' })
   async findAllNotificationsByUserId(
     @Param('id', ParseIntPipe) id: number,
+    @Query('includeRead') includeRead?: boolean,
   ): Promise<Notification[]> {
-    return this.notificationsService.findAllNotificationsByUserId(id, false);
+    return this.notificationsService.findAllNotificationsByUserId(id, includeRead === true);
   }
 
-  // @Get('/users/:id')
-  // @ApiOperation({ summary: 'find All notifications by User id' })
-  // @ApiOkResponse({ type: Notification, description: 'List of all Notifications By User Id' })
-  // @ApiNotFoundResponse({ description: 'Notification not found' })
-  // // @ApiUnauthorizedResponse({ description: 'Usuário não autenticado' })
-  // async findNotificationByUserId(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @ReqUser() user: User,
-  // ): Promise<Notification> {
-  //   return await this.notificationsService.findNotificationByUserId(id, user.id);
-  // }
-
   @Post()
-  @ApiOperation({ summary: 'Criar uma nova notificação' })
-  @ApiCreatedResponse({ type: Notification, description: 'Notificação criada com sucesso' })
-  @ApiBadRequestResponse({ description: 'Dados inválidos fornecidos' })
-  @ApiNotFoundResponse({ description: 'Notification not found' })
+  @Roles(Role.Admin, Role.Manager)
+  @ApiOperation({ summary: 'Create a new notification' })
+  @ApiCreatedResponse({ type: Notification, description: 'Notification created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid data provided' })
   async createNotification(
     @Body() body: CreateNotificationDto,
   ): Promise<Notification> {
@@ -86,37 +89,47 @@ export class NotificationsController {
   }
 
   @Post('/notifyUsersByRole')
+  @Roles(Role.Admin, Role.Manager)
   @ApiOperation({ summary: 'Notify users by role' })
-  @ApiCreatedResponse({ type: Notification, description: 'Notificação criada com sucesso' })
-  @ApiBadRequestResponse({ description: 'Dados inválidos fornecidos' })
-  @ApiNotFoundResponse({ description: 'Notification not found' })
+  @ApiCreatedResponse({ type: [Notification], description: 'Notifications created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid data provided' })
   async notifyUsersByRole(
     @Body() body: NotifyUsersByRoleDto,
   ): Promise<Notification[]> {
     return await this.notificationsService.notifyUsersByRole(body);
   }
 
-  /**
-   * Lista todas as notificações visíveis ao usuário.
-   */
-  // @Get()
-  // @ApiOperation({ summary: 'Listar notificações do usuário logado' })
-  // @ApiOkResponse({ type: [Notification], description: 'Lista de notificações' })
-  // async getUserNotifications(@ReqUser() user: User): Promise<Notification[]> {
-  //   return await this.notificationsService.getNotificationsForUser(user);
-  // }
+  @Patch(':id/read')
+  @ApiOperation({ summary: 'Mark notification as read' })
+  @ApiOkResponse({ type: Notification, description: 'Notification marked as read' })
+  @ApiNotFoundResponse({ description: 'Notification not found' })
+  async markAsRead(
+    @Param('id', ParseIntPipe) id: number,
+    @ReqUser() user: User,
+  ): Promise<Notification> {
+    return await this.notificationsService.markAsRead(id, user?.id);
+  }
 
-  /**
-   * Marca uma notificação como lida.
-   */
-  //   @Patch(':id/read')
-  //   @ApiOperation({ summary: 'Marcar notificação como lida' })
-  //   @ApiOkResponse({ type: Notification, description: 'Notificação marcada como lida' })
-  //   @ApiNotFoundResponse({ description: 'Notificação não encontrada' })
-  //   async markAsRead(
-  //     @Param('id', ParseIntPipe) id: number,
-  //     @ReqUser() user: User,
-  //   ): Promise<Notification> {
-  //     return await this.notificationsService.markAsRead(id, user);
-  //   }
+  @Patch('/me/read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read for authenticated user' })
+  @ApiOkResponse({ description: 'All notifications marked as read' })
+  async markAllAsRead(@ReqUser() user: User): Promise<{ message: string }> {
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    await this.notificationsService.markAllAsRead(user.id);
+    return { message: 'All notifications marked as read' };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a notification' })
+  @ApiOkResponse({ description: 'Notification deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Notification not found' })
+  async deleteNotification(
+    @Param('id', ParseIntPipe) id: number,
+    @ReqUser() user: User,
+  ): Promise<{ message: string }> {
+    await this.notificationsService.deleteNotification(id, user?.id);
+    return { message: 'Notification deleted successfully' };
+  }
 }

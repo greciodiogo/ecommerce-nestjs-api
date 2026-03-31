@@ -359,8 +359,8 @@ export class OrdersService {
   public notifySystemAdmin(roles: Array<Role>, order: Order) {
     roles.forEach((role) => {
       this.notificationsService.notifyUsersByRole({
-        title: 'new order placed #' + order.order_number,
-        message: 'new order placed #' + order.order_number,
+        title: `New order #${order.order_number}`,
+        message: `A new order has been placed: #${order.order_number}`,
         role: role,
       })
     })

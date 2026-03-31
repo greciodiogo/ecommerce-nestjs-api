@@ -5,7 +5,16 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  UpdateDateColumn,
 } from 'typeorm';
+
+export enum NotificationType {
+  ORDER = 'order',
+  PRODUCT = 'product',
+  SYSTEM = 'system',
+  PROMOTION = 'promotion',
+  GENERAL = 'general',
+}
 
 @Entity('notifications')
 export class Notification {
@@ -21,12 +30,29 @@ export class Notification {
   @Column({ default: false })
   isRead: boolean;
 
+  @Column({
+    type: 'enum',
+    enum: NotificationType,
+    default: NotificationType.GENERAL,
+  })
+  type: NotificationType;
+
+  @Column({ nullable: true })
+  relatedEntityId?: number;
+
+  @Column({ nullable: true })
+  actionUrl?: string;
+
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @ManyToOne(() => User, {
     nullable: true,
     onDelete: 'SET NULL',
+    eager: true,
   })
   user: User;
 }
