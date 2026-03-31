@@ -343,7 +343,7 @@ export class OrdersService {
       itemsTotal: formatKz(itemsTotal),
       deliveryPrice: formatKz(deliveryPrice),
       finalTotal: formatKz(finalTotal),
-      createdFormatted: moment(savedOrder.created).format('DD/MM/YYYY [às] HH:mm'),
+      created: moment(savedOrder.created).utcOffset('+01:00').format('DD/MM/YYYY [às] HH:mm'),
     };
 
     // Envia o email com os dados formatados
