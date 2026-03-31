@@ -427,6 +427,18 @@ export class OrdersService {
       );
       Object.assign(order.delivery, orderData.delivery);
       order.delivery.method = deliveryMethod;
+      
+      // Update delivery price based on address or method
+      let addressPrice: number | undefined = undefined;
+      if (orderData.delivery.addressId) {
+        const addressRepo = this.ordersRepository.manager.getRepository(Address);
+        const address = await addressRepo.findOne({ where: { id: orderData.delivery.addressId } });
+        if (address) {
+          order.delivery.addressEntity = address;
+          addressPrice = address.price ?? undefined;
+        }
+      }
+      order.delivery.price = addressPrice !== undefined ? addressPrice : deliveryMethod.price;
     }
     if (orderData.payment) {
       const paymentMethod = await this.paymentMethodsService.getMethod(
