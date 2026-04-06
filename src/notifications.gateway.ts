@@ -21,10 +21,14 @@ import { Server, Socket } from 'socket.io';
         credentials: true,
         methods: ['GET', 'POST'],
     },
-    transports: ['polling', 'websocket'], // Polling primeiro para Railway/Vercel
-    allowEIO3: true, // Compatibilidade com versões antigas
+    path: '/socket.io/', // Path explícito
+    transports: ['websocket', 'polling'], // WebSocket primeiro
+    allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
+    // Configurações importantes para Railway
+    serveClient: false,
+    cookie: false,
 })
 export class NotificationsGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
