@@ -22,13 +22,16 @@ import { Server, Socket } from 'socket.io';
         methods: ['GET', 'POST'],
     },
     path: '/socket.io/', // Path explícito
-    transports: ['websocket', 'polling'], // WebSocket primeiro
+    transports: ['polling'], // Apenas polling para Railway (mais confiável)
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
     // Configurações importantes para Railway
     serveClient: false,
     cookie: false,
+    // Configurações adicionais para ambientes cloud
+    allowUpgrades: false, // Não permitir upgrade para WebSocket
+    perMessageDeflate: false, // Desabilitar compressão
 })
 export class NotificationsGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -39,7 +42,7 @@ export class NotificationsGateway
 
     afterInit(server: Server) {
         console.log('🚀 WebSocket server initialized for notifications');
-        console.log('📡 Transports enabled: polling, websocket');
+        console.log('📡 Transport: polling only (optimized for Railway)');
     }
 
     handleConnection(client: Socket) {
