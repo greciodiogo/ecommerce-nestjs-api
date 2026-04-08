@@ -20,6 +20,7 @@ import { ReqUser } from 'src/auth/decorators/user.decorator';
 import { NotificationsService } from './notification.service';
 import { Notification } from './models/notification.entity';
 import { NotifyUsersByRoleDto } from './dto/notify-users-role.dto';
+import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -53,7 +54,30 @@ export class NotificationsController {
     return this.notificationsService.findAllNotificationsByUserId(user.id, includeRead === true);
   }
 
-  @Get('/me/unread-count')
+  @Get('/me/poll')
+  @ApiOperation({ summary: 'Poll for new notifications (long-polling)' })
+  @ApiQuery({ name: 'lastId', required: false, type: Number })
+  @ApiOkResponse({ type: [Notification], description: 'New notifications since lastId' })
+  async pollNotifications(
+    @ReqUser() user: User,
+    @Query('lastId') lastId?: number,
+  ): Promise<Notification[]> {
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    
+    // Buscar notificações não lidas mais recentes que lastId
+    const where: any = {
+      user: { id: user.id },
+      isRead: false,
+    };
+    
+    if (lastId) {
+      where.id = { $gt: lastId };
+    }
+    
+    return this.notificationsService.findAllNotificationsByUserId(user.id, false);
+  }
   @ApiOperation({ summary: 'Get unread notifications count for authenticated user' })
   @ApiOkResponse({ description: 'Unread notifications count' })
   async getUnreadCount(@ReqUser() user: User): Promise<{ count: number }> {
@@ -131,5 +155,32 @@ export class NotificationsController {
   ): Promise<{ message: string }> {
     await this.notificationsService.deleteNotification(id, user?.id);
     return { message: 'Notification deleted successfully' };
+  }
+
+  // Device Token Endpoints
+  @Post('/device-tokens')
+  @ApiOperation({ summary: 'Register device token for push notifications' })
+  @ApiCreatedResponse({ description: 'Device token registered successfully' })
+  @ApiUnauthorizedResponse({ description: 'User not authenticated' })
+  async registerDeviceToken(
+    @ReqUser() user: User,
+    @Body() body: any,
+  ): Promise<{ message: string }> {
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    await this.notificationsService.registerDeviceToken(user.id, body);
+    return { message: 'Device token registered successfully' };
+  }
+
+  @Delete('/device-tokens/:token')
+  @ApiOperation({ summary: 'Remove device token' })
+  @ApiOkResponse({ description: 'Device token removed successfully' })
+  async removeDeviceToken(
+    @Param('token') token: string,
+    @ReqUser() user: User,
+  ): Promise<{ message: string }> {
+    await this.notificationsService.removeDeviceToken(token, user?.id);
+    return { message: 'Device token removed successfully' };
   }
 }

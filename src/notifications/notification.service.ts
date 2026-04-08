@@ -10,14 +10,20 @@ import { Notification, NotificationType } from './models/notification.entity';
 import { NotifyUsersByRoleDto } from './dto/notify-users-role.dto';
 import { NotFoundError } from 'src/errors/not-found.error';
 import { NotificationsGateway } from 'src/notifications.gateway';
+import { FcmService } from './fcm.service';
+import { DeviceToken } from './models/device-token.entity';
+import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationsRepository: Repository<Notification>,
+    @InjectRepository(DeviceToken)
+    private deviceTokenRepository: Repository<DeviceToken>,
     private readonly gateway: NotificationsGateway,
     private readonly usersService: UsersService,
+    private readonly fcmService: FcmService,
   ) { }
 
   async getNotifications(includeRead = false): Promise<Notification[]> {
@@ -89,8 +95,11 @@ export class NotificationsService {
 
     const savedNotification = await this.notificationsRepository.save(notification);
     
-    // Send real-time notification
+    // Send real-time notification via WebSocket
     this.gateway.sendNotificationToUser(user.id, savedNotification);
+    
+    // Send push notification to user's devices
+    await this.sendPushNotificationToUser(user.id, savedNotification);
     
     return savedNotification;
   }
@@ -151,6 +160,91 @@ export class NotificationsService {
     
     if (result.affected === 0) {
       throw new NotFoundError('Notification not found', 'id', notificationId.toString());
+    }
+  }
+
+  // Device Token Management
+  async registerDeviceToken(userId: number, tokenData: RegisterDeviceTokenDto): Promise<DeviceToken> {
+    const user = await this.usersService.getUser(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if token already exists
+    let deviceToken = await this.deviceTokenRepository.findOne({
+      where: { token: tokenData.token },
+      relations: ['user'],
+    });
+
+    if (deviceToken) {
+      // Update existing token
+      deviceToken.deviceName = tokenData.deviceName || deviceToken.deviceName;
+      deviceToken.deviceType = tokenData.deviceType || deviceToken.deviceType;
+      deviceToken.isActive = true;
+      deviceToken.user = user;
+      return this.deviceTokenRepository.save(deviceToken);
+    }
+
+    // Create new token
+    deviceToken = this.deviceTokenRepository.create({
+      user,
+      token: tokenData.token,
+      deviceName: tokenData.deviceName,
+      deviceType: tokenData.deviceType || 'mobile',
+      isActive: true,
+    });
+
+    return this.deviceTokenRepository.save(deviceToken);
+  }
+
+  async removeDeviceToken(token: string, userId?: number): Promise<void> {
+    const where: any = { token };
+    if (userId) {
+      where.user = { id: userId };
+    }
+
+    const result = await this.deviceTokenRepository.delete(where);
+    
+    if (result.affected === 0) {
+      throw new NotFoundError('Device token not found', 'token', token);
+    }
+  }
+
+  async getUserDeviceTokens(userId: number): Promise<DeviceToken[]> {
+    return this.deviceTokenRepository.find({
+      where: { user: { id: userId }, isActive: true },
+    });
+  }
+
+  // Push Notification Methods
+  private async sendPushNotificationToUser(userId: number, notification: Notification): Promise<void> {
+    if (!this.fcmService.isAvailable()) {
+      return;
+    }
+
+    const deviceTokens = await this.getUserDeviceTokens(userId);
+    
+    if (deviceTokens.length === 0) {
+      return;
+    }
+
+    const tokens = deviceTokens.map(dt => dt.token);
+    const response = await this.fcmService.sendToMultipleDevices(tokens, notification);
+
+    // Handle invalid tokens
+    if (response && response.failureCount > 0) {
+      for (let i = 0; i < response.responses.length; i++) {
+        const resp = response.responses[i];
+        if (!resp.success && 
+            (resp.error?.code === 'messaging/invalid-registration-token' ||
+             resp.error?.code === 'messaging/registration-token-not-registered')) {
+          // Deactivate invalid token
+          await this.deviceTokenRepository.update(
+            { token: tokens[i] },
+            { isActive: false }
+          );
+        }
+      }
     }
   }
 }

@@ -36,3 +36,17 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 /uploads
+
+# Firebase credentials
+*firebase-adminsdk*.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!nest-cli.json
+!openapitools.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
