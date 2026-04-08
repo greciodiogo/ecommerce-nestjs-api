@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Index,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity('device_tokens')
@@ -15,24 +16,25 @@ export class DeviceToken {
   id: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ type: 'text', unique: true })
   @Index()
   token: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'device_name', nullable: true })
   deviceName?: string;
 
-  @Column({ default: 'mobile' })
+  @Column({ name: 'device_type', default: 'mobile' })
   deviceType: string; // 'web', 'android', 'ios', 'mobile'
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
