@@ -15,6 +15,6 @@ import { FcmService } from './fcm.service';
     UsersModule],
   providers: [NotificationsService, NotificationsGateway, FcmService],
   controllers: [NotificationsController],
-  exports: [NotificationsService],
+  exports: [NotificationsService, NotificationsGateway],
 })
 export class NotificationsModule { }

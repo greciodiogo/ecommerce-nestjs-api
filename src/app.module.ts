@@ -35,6 +35,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { SplashScreensModule } from './splash-screens/splash-screens.module';
 import { BannersModule } from './banners/banners.module';
 import { HealthModule } from './health/health.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { HealthModule } from './health/health.module';
     SplashScreensModule,
     BannersModule,
     HealthModule,
+    WebhooksModule,
   ],
   controllers: [],
   providers: [
