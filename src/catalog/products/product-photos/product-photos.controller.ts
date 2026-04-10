@@ -52,14 +52,16 @@ export class ProductPhotosController {
   async getProductPhoto(
     @Param('id', ParseIntPipe) id: number,
     @Param('photoId', ParseIntPipe) photoId: number,
-    @Query('thumbnail', ParseBoolPipe) thumbnail: boolean,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('thumbnail') thumbnail?: string,
   ) {
+    // Converter string para boolean, default false
+    const useThumbnail = thumbnail === 'true';
 
     const result = await this.productPhotosService.getProductPhoto(
       id,
       photoId,
-      thumbnail,
+      useThumbnail,
     );
 
     const fileBuffer = await result.arrayBuffer();
@@ -67,8 +69,11 @@ export class ProductPhotosController {
 
     res.set({
       'Content-Type': 'image/png',
-      'Content-Disposition': 'inline', // ou remova totalmente
-      // 'Content-Disposition': `attachment; filename=${data.path}`,
+      'Content-Disposition': 'inline',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     });
 
     res.send(Buffer.from(byteArray));
