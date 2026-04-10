@@ -56,7 +56,7 @@ export class WebhooksService {
         title: data.title,
         message: notificationMessage,
         type: this.mapNotificationType(data.type),
-        relatedEntityId: data.orderId?.toString(),
+        relatedEntityId: data.orderId, // Número, não string
         actionUrl: `/orders/${data.orderId}`,
       });
 
@@ -65,7 +65,7 @@ export class WebhooksService {
         title: data.title,
         message: notificationMessage,
         type: this.mapNotificationType(data.type),
-        relatedEntityId: data.orderId?.toString(),
+        relatedEntityId: data.orderId, // Número, não string
         actionUrl: `/orders/${data.orderId}`,
       });
 

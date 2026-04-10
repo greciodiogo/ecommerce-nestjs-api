@@ -2,7 +2,6 @@ import { Body, Controller, Post, Headers, BadRequestException } from '@nestjs/co
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
 import { OrderNotificationDto } from './dto/order-notification.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('webhooks')
 @Controller('webhooks')
@@ -10,7 +9,6 @@ export class WebhooksController {
   constructor(private readonly webhooksService: WebhooksService) {}
 
   @Post('order-notification')
-  @Public() // Permite acesso sem autenticação (webhook externo)
   @ApiOperation({ 
     summary: 'Receive order notifications from external systems (encontrarCore)',
     description: 'Webhook endpoint to receive order notifications from encontrarCore API and broadcast to admin dashboard via Socket.io'
