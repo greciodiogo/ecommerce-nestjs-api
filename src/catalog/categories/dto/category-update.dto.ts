@@ -18,7 +18,15 @@ export class CategoryUpdateDto {
 
   @IsString()
   @IsOptional()
+  name_en?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  description_en?: string;
 
   @IsString()
   @IsOptional()

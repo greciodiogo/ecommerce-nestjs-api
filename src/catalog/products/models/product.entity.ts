@@ -27,6 +27,9 @@ export class Product {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  name_en?: string;
+
   @Column({ type: 'double precision', nullable: true })
   price: number;
 
@@ -38,6 +41,9 @@ export class Product {
 
   @Column()
   description: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description_en?: string;
 
   @Column()
   stock: number;

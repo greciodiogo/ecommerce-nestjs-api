@@ -12,6 +12,10 @@ export class ProductCreateDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  name_en?: string;
+
   @IsNumber()
   @Min(0)
   price: number;
@@ -26,6 +30,10 @@ export class ProductCreateDto {
 
   @IsString()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  description_en?: string;
 
   @IsNumber()
   @Min(0)

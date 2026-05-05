@@ -18,8 +18,14 @@ export class Category {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  name_en?: string;
+
   @Column()
   description: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description_en?: string;
 
   @Column({ nullable: true })
   slug?: string;

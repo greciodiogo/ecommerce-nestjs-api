@@ -13,6 +13,10 @@ export class ProductUpdateDto {
   @IsNotEmpty()
   name?: string;
 
+  @IsString()
+  @IsOptional()
+  name_en?: string;
+
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -30,6 +34,10 @@ export class ProductUpdateDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  description_en?: string;
 
   @IsNumber()
   @Min(0)

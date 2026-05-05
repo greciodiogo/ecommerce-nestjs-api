@@ -6,7 +6,15 @@ export class CategoryCreateDto {
   name: string;
 
   @IsString()
+  @IsOptional()
+  name_en?: string;
+
+  @IsString()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  description_en?: string;
 
   @IsString()
   @IsOptional()
