@@ -37,7 +37,7 @@ import { BannersModule } from './banners/banners.module';
 import { HealthModule } from './health/health.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { DeliverySettingsModule } from './delivery-settings/delivery-settings.module';
-
+import { AnalyticsModule } from './analytics/analytics.module';
 import { SearchTagsModule } from './search-tags/search-tags.module';
 
 @Module({
@@ -91,6 +91,7 @@ import { SearchTagsModule } from './search-tags/search-tags.module';
     WebhooksModule,
     DeliverySettingsModule,
     SearchTagsModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [
