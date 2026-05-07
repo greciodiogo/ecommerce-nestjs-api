@@ -5,6 +5,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -47,6 +49,22 @@ import { SearchTagsModule } from './search-tags/search-tags.module';
       isGlobal: true,
       validationSchema: schema,
       load: [configuration],
+    }),
+    // Serve static files from public directory at /static path
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/static',
+      serveStaticOptions: {
+        index: false,
+        cacheControl: true,
+        maxAge: 86400000, // 24 hours in milliseconds
+        setHeaders: (res, path) => {
+          // Add CORS headers for static files (animations, etc)
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+          res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        },
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
