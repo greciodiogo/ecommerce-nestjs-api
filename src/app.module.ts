@@ -41,6 +41,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { DeliverySettingsModule } from './delivery-settings/delivery-settings.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SearchTagsModule } from './search-tags/search-tags.module';
+import { ConfigAppModule } from './config/config.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { SearchTagsModule } from './search-tags/search-tags.module';
     DeliverySettingsModule,
     SearchTagsModule,
     AnalyticsModule,
+    ConfigAppModule,
   ],
   controllers: [],
   providers: [
