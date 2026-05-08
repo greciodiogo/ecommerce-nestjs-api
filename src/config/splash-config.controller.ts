@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Setting } from '../settings/models/setting.entity';
 
-@Controller('config')
+@Controller('api/config')
 export class SplashConfigController {
   constructor(
     @InjectRepository(Setting)
