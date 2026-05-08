@@ -37,12 +37,14 @@ export class SplashConfigController {
       }, {} as Record<string, string>);
 
       // Valores com fallback
-      const version = settingsMap['splash_version'] || '1.1.0';
-      const backgroundColor = settingsMap['splash_color'] || '#FF9900';
+      const version = settingsMap['splash_version'] || '1.2.0';
+      const backgroundColor = settingsMap['splash_color'] || '#FF9900'; // Laranja padrão
       const enabled = settingsMap['splash_enabled'] === 'true' || true;
+      
+      // Usar versão 1.2.0 que tem o fundo correto
       const animationUrl = 
         settingsMap['splash_animation_url'] || 
-        `https://api.encontrarshopping.com/static/animations/splash_v${version}.json`;
+        `https://api.encontrarshopping.com/static/animations/splash_v1.2.0.json`;
 
       return {
         version: version,
@@ -70,15 +72,15 @@ export class SplashConfigController {
       console.error('[SPLASH CONFIG] Erro ao carregar configuração:', error);
       
       // Retorna configuração padrão em caso de erro
-      const version = '1.1.0';
+      const version = '1.2.0';
       return {
         version: version,
         url: `https://api.encontrarshopping.com/static/animations/splash_v${version}.json`,
         checksum: null,
         enabled: true,
-        backgroundColor: '#FF9900',
+        backgroundColor: '#FF9900', // Laranja padrão
         metadata: {
-          fileSize: 98828,
+          fileSize: 102059,
           duration: 3000,
           lastUpdated: new Date().toISOString(),
         },
