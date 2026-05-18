@@ -21,14 +21,22 @@ services:
       SESSION_SECRET: secret
       ADMIN_EMAIL: admin@test.local
       ADMIN_PASSWORD: test1234
-      MAIL_HOST:  smtp.gmail.com
-      MAIL_PORT:  587
-      EMAIL_USER: fonebahia8@gmail.com
-      EMAIL_PASS: bcue urio gwrt fmow 
-      SUPABASE_URL: https://vpqmfnykuikqgdtihwms.supabase.co
-      SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcW1mbnlrdWlrcWdkdGlod21zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4NzA3MTQsImV4cCI6MjA2NDQ0NjcxNH0.AtDMyv8-3fF-bJugJpEUa1uJ7ii1EJmQvoa6uTxJ0Tg
-      SUPABASE_BUCKET: uploads
+      MAIL_HOST: "${MAIL_HOST:-smtp.gmail.com}"
+      MAIL_PORT: "${MAIL_PORT:-587}"
+      EMAIL_USER: "${EMAIL_USER}"
+      EMAIL_PASS: "${EMAIL_PASS}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_KEY: "${SUPABASE_KEY}"
+      SUPABASE_BUCKET: "${SUPABASE_BUCKET:-uploads}"
       SESSION_DOMAIN: localhost
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      FIREBASE_SERVICE_ACCOUNT: "${FIREBASE_SERVICE_ACCOUNT}"
+      FIREBASE_PROJECT_ID: "${FIREBASE_PROJECT_ID}"
+      FIREBASE_CLIENT_EMAIL: "${FIREBASE_CLIENT_EMAIL}"
+      APP_STORE_KEY_ID: "${APP_STORE_KEY_ID}"
+      APP_STORE_ISSUER_ID: "${APP_STORE_ISSUER_ID}"
+      APP_STORE_APP_ID: "${APP_STORE_APP_ID}"
+      APP_STORE_PRIVATE_KEY: "${APP_STORE_PRIVATE_KEY}"
     command: npm run start:dev
     ports:
       - "80:80"
@@ -54,8 +62,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: fonebahia8@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL:-admin@example.com}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD:-admin}"
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     volumes:

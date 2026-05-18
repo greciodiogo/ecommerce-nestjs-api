@@ -37,4 +37,15 @@ export default () => ({
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
   },
+  appStore: {
+    keyId: process.env.APP_STORE_KEY_ID,
+    issuerId: process.env.APP_STORE_ISSUER_ID,
+    appId: process.env.APP_STORE_APP_ID,
+    privateKey: process.env.APP_STORE_PRIVATE_KEY,
+  },
+  firebase: {
+    serviceAccount: process.env.FIREBASE_SERVICE_ACCOUNT,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  },
 });
