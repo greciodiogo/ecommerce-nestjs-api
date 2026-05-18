@@ -50,3 +50,7 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+
+# App Store Connect API Keys
+*.p8
+AuthKey_*.p8
