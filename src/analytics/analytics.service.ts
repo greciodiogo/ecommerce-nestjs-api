@@ -19,17 +19,33 @@ export class AnalyticsService {
    */
   private async initializeGooglePlayAPI() {
     try {
+      // Try to get credentials from environment variable (JSON string)
+      const serviceAccountJson = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT;
       const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       
-      if (!keyFile) {
-        this.logger.warn('GOOGLE_APPLICATION_CREDENTIALS not set. Using mock data.');
+      if (!serviceAccountJson && !keyFile) {
+        this.logger.warn('Google Play credentials not set. Using mock data.');
         return;
       }
 
-      const auth = new google.auth.GoogleAuth({
-        keyFile,
-        scopes: ['https://www.googleapis.com/auth/androidpublisher'],
-      });
+      let auth;
+
+      if (serviceAccountJson) {
+        // Parse JSON from environment variable
+        const credentials = JSON.parse(serviceAccountJson);
+        auth = new google.auth.GoogleAuth({
+          credentials,
+          scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+        });
+        this.logger.log('Using Google Play credentials from environment variable');
+      } else {
+        // Use key file path
+        auth = new google.auth.GoogleAuth({
+          keyFile,
+          scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+        });
+        this.logger.log('Using Google Play credentials from file');
+      }
 
       this.androidPublisher = google.androidpublisher({
         version: 'v3',
