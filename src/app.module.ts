@@ -42,6 +42,7 @@ import { DeliverySettingsModule } from './delivery-settings/delivery-settings.mo
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SearchTagsModule } from './search-tags/search-tags.module';
 import { ConfigAppModule } from './config/config.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { ConfigAppModule } from './config/config.module';
     SearchTagsModule,
     AnalyticsModule,
     ConfigAppModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [
