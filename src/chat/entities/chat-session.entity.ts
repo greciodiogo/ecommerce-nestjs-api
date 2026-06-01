@@ -17,7 +17,7 @@ export class ChatSession {
   id: string;
 
   @Column({ name: 'user_id', nullable: true })
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'user_id' })
