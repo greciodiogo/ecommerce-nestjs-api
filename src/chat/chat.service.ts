@@ -10,7 +10,7 @@ import { GeminiAIService } from './services/gemini-ai.service';
 export interface ChatRequest {
   message: string;
   sessionId?: string;
-  userId?: string;
+  userId?: number;
 }
 
 export interface ChatResponse {
@@ -124,7 +124,7 @@ export class ChatService {
     });
   }
 
-  async getUserSessions(userId: string): Promise<ChatSession[]> {
+  async getUserSessions(userId: number): Promise<ChatSession[]> {
     return this.sessionRepository.find({
       where: { userId },
       order: { updatedAt: 'DESC' },
@@ -132,7 +132,7 @@ export class ChatService {
     });
   }
 
-  private async buildContext(sessionId: string, userId?: string): Promise<string> {
+  private async buildContext(sessionId: string, userId?: number): Promise<string> {
     const recentMessages = await this.messageRepository.find({
       where: { sessionId },
       order: { createdAt: 'DESC' },
