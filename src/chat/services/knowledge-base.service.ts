@@ -112,6 +112,25 @@ export class KnowledgeBaseService {
 
   async search(query: string): Promise<string | null> {
     try {
+      // Detect if question requires reasoning/intelligence (should use AI)
+      const reasoningPatterns = [
+        'mais caro', 'mais barato', 'melhor', 'pior', 'maior', 'menor',
+        'qual', 'quais', 'quantos', 'quanto custa', 'compare', 'diferença',
+        'recommend', 'suggestion', 'best', 'worst', 'expensive', 'cheap',
+        'most', 'least', 'compare', 'difference', 'which'
+      ];
+      
+      const normalizedQuery = query.toLowerCase();
+      const requiresReasoning = reasoningPatterns.some(pattern => 
+        normalizedQuery.includes(pattern)
+      );
+      
+      // If requires reasoning, skip to AI (will be handled by chat.service)
+      if (requiresReasoning) {
+        console.log('[KnowledgeBase] Query requires reasoning, skipping to AI');
+        return null;
+      }
+
       // Extract keywords from query (remove common words in PT and EN)
       const stopWords = [
         // Portuguese
