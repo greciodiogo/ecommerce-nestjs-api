@@ -84,6 +84,15 @@ export class QuickResponsesService {
   findQuickResponse(message: string): string | null {
     const normalized = message.toLowerCase().trim();
     
+    // Skip quick responses if asking about specific products/shops
+    const productKeywords = ['tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso de', 'produto', 'comprar'];
+    const isProductQuery = productKeywords.some((keyword) => normalized.includes(keyword));
+    
+    if (isProductQuery && normalized.length > 15) {
+      // Let Knowledge Base handle product queries
+      return null;
+    }
+    
     // Find matching responses
     const matches = this.responses
       .filter((response) =>

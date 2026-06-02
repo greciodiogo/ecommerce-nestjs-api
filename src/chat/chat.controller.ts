@@ -11,15 +11,20 @@ export class ChatController {
     @Body() dto: ChatRequestDto,
     @Req() req: any,
   ): Promise<ChatResponseDto> {
-    const userId = req.user?.id;
-    
-    const result = await this.chatService.chat({
-      message: dto.message,
-      sessionId: dto.sessionId,
-      userId,
-    });
+    try {
+      const userId = req.user?.id;
+      
+      const result = await this.chatService.chat({
+        message: dto.message,
+        sessionId: dto.sessionId,
+        userId,
+      });
 
-    return result;
+      return result;
+    } catch (error) {
+      console.error('[ChatController] Error:', error);
+      throw error;
+    }
   }
 
   @Get('history/:sessionId')
