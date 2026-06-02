@@ -94,20 +94,6 @@ export class QuickResponsesService {
   findQuickResponse(message: string): string | null {
     const normalized = message.toLowerCase().trim();
     
-    // Skip quick responses if asking about specific products/shops (PT and EN)
-    const productKeywords = [
-      // Portuguese
-      'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso de', 'produto', 'comprar',
-      // English
-      'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'product', 'buy', 'purchase'
-    ];
-    const isProductQuery = productKeywords.some((keyword) => normalized.includes(keyword));
-    
-    if (isProductQuery) {
-      // Let Knowledge Base handle product queries
-      return null;
-    }
-    
     // Extract words from message for exact matching
     const messageWords = normalized.split(/[\s,;.!?]+/).filter(w => w.length > 0);
     

@@ -112,56 +112,40 @@ export class KnowledgeBaseService {
 
   async search(query: string): Promise<string | null> {
     try {
-      // Detect if question requires reasoning/intelligence (should use AI)
-      const reasoningPatterns = [
-        'mais caro', 'mais barato', 'melhor', 'pior', 'maior', 'menor',
-        'qual', 'quais', 'quantos', 'quanto custa', 'compare', 'diferença',
-        'recommend', 'suggestion', 'best', 'worst', 'expensive', 'cheap',
-        'most', 'least', 'compare', 'difference', 'which'
-      ];
-      
-      const normalizedQuery = query.toLowerCase();
-      const requiresReasoning = reasoningPatterns.some(pattern => 
-        normalizedQuery.includes(pattern)
-      );
-      
-      // If requires reasoning, skip to AI (will be handled by chat.service)
-      if (requiresReasoning) {
-        console.log('[KnowledgeBase] Query requires reasoning, skipping to AI');
-        return null;
-      }
+      console.log('[KnowledgeBase] Searching for:', query);
 
-      // Extract keywords from query (remove common words in PT and EN)
-      const stopWords = [
-        // Portuguese
-        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou', 'que', 'esse', 'esse', 'isso', 'esta', 'está', 'como', 'vai', 'faz', 'fazer', 'app', 'aplicativo',
-        // English
-        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there', 'what', 'how', 'does', 'app', 'application', 'this', 'that'
-      ];
+      // Extract keywords - be LESS restrictive
+      const stopWords = ['tem', 'qual', 'quais', 'the', 'and', 'or'];
       
       const keywords = query
         .toLowerCase()
-        .split(/[\s,]+/) // Split by spaces or commas
-        .filter(word => word.length > 3 && !stopWords.includes(word)) // Minimum 4 characters
-        .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
+        .split(/[\s,]+/)
+        .filter(word => word.length > 3 && !stopWords.includes(word))
+        .filter((word, index, self) => self.indexOf(word) === index);
 
-      console.log('[KnowledgeBase] Original query:', query);
-      console.log('[KnowledgeBase] Extracted keywords:', keywords);
+      console.log('[KnowledgeBase] Keywords:', keywords);
 
-      // If no valid keywords, it's probably a general question
-      if (keywords.length === 0) return null;
+      // If we have ANY keywords, search
+      if (keywords.length > 0) {
+        // Try products first
+        const productResult = await this.searchProducts(keywords);
+        if (productResult) {
+          console.log('[KnowledgeBase] Found products');
+          return productResult;
+        }
 
-      // Try products first
-      const productResult = await this.searchProducts(keywords);
-      if (productResult) return productResult;
+        // Then try shops
+        const shopResult = await this.searchShops(keywords);
+        if (shopResult) {
+          console.log('[KnowledgeBase] Found shops');
+          return shopResult;
+        }
+      }
 
-      // Then try shops
-      const shopResult = await this.searchShops(keywords);
-      if (shopResult) return shopResult;
-
+      console.log('[KnowledgeBase] No results found');
       return null;
     } catch (error) {
-      console.error('[KnowledgeBase] Error searching:', error);
+      console.error('[KnowledgeBase] Error:', error);
       return null;
     }
   }

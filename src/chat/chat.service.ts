@@ -114,7 +114,14 @@ export class ChatService {
               this.logger.log(`AI response generated for: "${request.message}"`);
             } else {
               // Fallback if AI not configured
-              response = 'Desculpe, não entendi sua pergunta. Pode reformular ou perguntar sobre horários, localização, produtos ou lojas? 😊';
+              response = `Hmm, não consegui entender "${request.message}". 
+
+Posso ajudar com:
+🔍 Buscar produtos (ex: "tem vinho")
+⏰ Horários do shopping
+📍 Localização
+
+O que você procura? 😊`;
               source = ResponseSource.QUICK;
             }
           }
