@@ -52,7 +52,27 @@ export class ProductsService {
       queryBuilder.andWhere('product.id = :id', { id: +id });
     }
     if (name) {
-      queryBuilder.andWhere('LOWER(product.name) LIKE LOWER(:name)', { name: `%${name}%` });
+      // Split search into keywords and build OR conditions (PT and EN stopwords)
+      const stopWords = [
+        // Portuguese
+        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou',
+        // English
+        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there'
+      ];
+      const keywords = name
+        .toLowerCase()
+        .split(/[\s,]+/)
+        .filter(word => word.length > 2 && !stopWords.includes(word));
+
+      if (keywords.length > 0) {
+        const conditions = keywords.map((keyword, index) => {
+          const param = `name${index}`;
+          queryBuilder.setParameter(param, `%${keyword}%`);
+          return `(LOWER(product.name) LIKE LOWER(:${param}) OR LOWER(product.description) LIKE LOWER(:${param}))`;
+        }).join(' OR ');
+        
+        queryBuilder.andWhere(`(${conditions})`);
+      }
     }
     if (shopName) {
       queryBuilder.andWhere('LOWER(shop.shopName) LIKE LOWER(:shopName)', {
@@ -337,7 +357,27 @@ export class ProductsService {
       queryBuilder.andWhere('product.id = :id', { id: +id });
     }
     if (name) {
-      queryBuilder.andWhere('LOWER(product.name) LIKE LOWER(:name)', { name: `%${name}%` });
+      // Split search into keywords and build OR conditions (PT and EN stopwords)
+      const stopWords = [
+        // Portuguese
+        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou',
+        // English
+        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there'
+      ];
+      const keywords = name
+        .toLowerCase()
+        .split(/[\s,]+/)
+        .filter(word => word.length > 2 && !stopWords.includes(word));
+
+      if (keywords.length > 0) {
+        const conditions = keywords.map((keyword, index) => {
+          const param = `name${index}`;
+          queryBuilder.setParameter(param, `%${keyword}%`);
+          return `(LOWER(product.name) LIKE LOWER(:${param}) OR LOWER(product.description) LIKE LOWER(:${param}))`;
+        }).join(' OR ');
+        
+        queryBuilder.andWhere(`(${conditions})`);
+      }
     }
     if (shopName) {
       queryBuilder.andWhere('LOWER(shop.shopName) LIKE LOWER(:shopName)', {

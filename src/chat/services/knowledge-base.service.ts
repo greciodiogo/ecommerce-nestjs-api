@@ -13,16 +13,19 @@ export class KnowledgeBaseService {
     private readonly shopRepository: Repository<Shop>,
   ) {}
 
-  async searchProducts(query: string): Promise<string | null> {
+  async searchProducts(keywords: string[]): Promise<string | null> {
     try {
-      console.log('[KnowledgeBase] Searching products for:', query);
+      console.log('[KnowledgeBase] Searching products for keywords:', keywords);
       
+      // Build OR conditions for each keyword
+      const whereConditions = keywords.flatMap(keyword => [
+        { name: ILike(`%${keyword}%`) },
+        { description: ILike(`%${keyword}%`) },
+      ]);
+
       const products = await this.productRepository.find({
-        where: [
-          { name: ILike(`%${query}%`) },
-          { description: ILike(`%${query}%`) },
-        ],
-        take: 5,
+        where: whereConditions,
+        take: 10, // Increased to show more results
         relations: ['shop'],
       });
 
@@ -30,18 +33,27 @@ export class KnowledgeBaseService {
 
       if (products.length === 0) return null;
 
-      let response = `Encontrei ${products.length} produto(s) relacionado(s):\n\n`;
+      // Remove duplicates by id
+      const uniqueProducts = Array.from(
+        new Map(products.map(p => [p.id, p])).values()
+      );
+
+      let response = `Encontrei ${uniqueProducts.length} produto(s):\n\n`;
       
-      products.forEach((product, index) => {
+      uniqueProducts.slice(0, 5).forEach((product, index) => {
         response += `${index + 1}. **${product.name}**\n`;
-        response += `   💰 R$ ${product.price.toFixed(2)}\n`;
+        response += `   💰 ${(product.price / 100).toFixed(2)} AOA\n`;
         if (product.shop) {
           response += `   🏪 ${product.shop.shopName}\n`;
         }
         response += `\n`;
       });
 
-      response += 'Quer saber mais sobre algum desses produtos?';
+      if (uniqueProducts.length > 5) {
+        response += `... e mais ${uniqueProducts.length - 5} produto(s).\n\n`;
+      }
+
+      response += 'Quer saber mais sobre algum produto? 😊';
       
       return response;
     } catch (error) {
@@ -50,25 +62,33 @@ export class KnowledgeBaseService {
     }
   }
 
-  async searchShops(query: string): Promise<string | null> {
+  async searchShops(keywords: string[]): Promise<string | null> {
     try {
-      console.log('[KnowledgeBase] Searching shops for:', query);
+      console.log('[KnowledgeBase] Searching shops for keywords:', keywords);
       
+      // Build OR conditions for each keyword
+      const whereConditions = keywords.flatMap(keyword => [
+        { shopName: ILike(`%${keyword}%`) },
+        { address: ILike(`%${keyword}%`) },
+      ]);
+
       const shops = await this.shopRepository.find({
-        where: [
-          { shopName: ILike(`%${query}%`) },
-          { address: ILike(`%${query}%`) },
-        ],
-        take: 5,
+        where: whereConditions,
+        take: 10,
       });
 
       console.log('[KnowledgeBase] Found shops:', shops.length);
 
       if (shops.length === 0) return null;
 
-      let response = `Encontrei ${shops.length} loja(s):\n\n`;
+      // Remove duplicates by id
+      const uniqueShops = Array.from(
+        new Map(shops.map(s => [s.id, s])).values()
+      );
+
+      let response = `Encontrei ${uniqueShops.length} loja(s):\n\n`;
       
-      shops.forEach((shop, index) => {
+      uniqueShops.slice(0, 5).forEach((shop, index) => {
         response += `${index + 1}. **${shop.shopName}**\n`;
         if (shop.address) {
           response += `   📍 ${shop.address}\n`;
@@ -79,6 +99,10 @@ export class KnowledgeBaseService {
         response += `\n`;
       });
 
+      if (uniqueShops.length > 5) {
+        response += `... e mais ${uniqueShops.length - 5} loja(s).\n\n`;
+      }
+
       return response;
     } catch (error) {
       console.error('[KnowledgeBase] Error searching shops:', error);
@@ -88,12 +112,31 @@ export class KnowledgeBaseService {
 
   async search(query: string): Promise<string | null> {
     try {
+      // Extract keywords from query (remove common words in PT and EN)
+      const stopWords = [
+        // Portuguese
+        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou',
+        // English
+        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there'
+      ];
+      
+      const keywords = query
+        .toLowerCase()
+        .split(/[\s,]+/) // Split by spaces or commas
+        .filter(word => word.length > 2 && !stopWords.includes(word))
+        .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
+
+      console.log('[KnowledgeBase] Original query:', query);
+      console.log('[KnowledgeBase] Extracted keywords:', keywords);
+
+      if (keywords.length === 0) return null;
+
       // Try products first
-      const productResult = await this.searchProducts(query);
+      const productResult = await this.searchProducts(keywords);
       if (productResult) return productResult;
 
       // Then try shops
-      const shopResult = await this.searchShops(query);
+      const shopResult = await this.searchShops(keywords);
       if (shopResult) return shopResult;
 
       return null;
