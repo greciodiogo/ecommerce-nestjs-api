@@ -69,14 +69,19 @@ export class KnowledgeBaseService {
   }
 
   async search(query: string): Promise<string | null> {
-    // Try products first
-    const productResult = await this.searchProducts(query);
-    if (productResult) return productResult;
+    try {
+      // Try products first
+      const productResult = await this.searchProducts(query);
+      if (productResult) return productResult;
 
-    // Then try shops
-    const shopResult = await this.searchShops(query);
-    if (shopResult) return shopResult;
+      // Then try shops
+      const shopResult = await this.searchShops(query);
+      if (shopResult) return shopResult;
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error('[KnowledgeBase] Error searching:', error);
+      return null;
+    }
   }
 }
