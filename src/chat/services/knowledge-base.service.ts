@@ -115,20 +115,21 @@ export class KnowledgeBaseService {
       // Extract keywords from query (remove common words in PT and EN)
       const stopWords = [
         // Portuguese
-        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou',
+        'tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso', 'de', 'um', 'uma', 'o', 'a', 'os', 'as', 'para', 'com', 'sem', 'aqui', 'ai', 'aí', 'e', 'ou', 'que', 'esse', 'esse', 'isso', 'esta', 'está', 'como', 'vai', 'faz', 'fazer', 'app', 'aplicativo',
         // English
-        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there'
+        'have', 'has', 'sell', 'selling', 'looking', 'want', 'need', 'search', 'searching', 'for', 'the', 'and', 'or', 'with', 'without', 'here', 'there', 'what', 'how', 'does', 'app', 'application', 'this', 'that'
       ];
       
       const keywords = query
         .toLowerCase()
         .split(/[\s,]+/) // Split by spaces or commas
-        .filter(word => word.length > 2 && !stopWords.includes(word))
+        .filter(word => word.length > 3 && !stopWords.includes(word)) // Minimum 4 characters
         .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
 
       console.log('[KnowledgeBase] Original query:', query);
       console.log('[KnowledgeBase] Extracted keywords:', keywords);
 
+      // If no valid keywords, it's probably a general question
       if (keywords.length === 0) return null;
 
       // Try products first
