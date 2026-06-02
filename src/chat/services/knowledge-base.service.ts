@@ -14,58 +14,76 @@ export class KnowledgeBaseService {
   ) {}
 
   async searchProducts(query: string): Promise<string | null> {
-    const products = await this.productRepository.find({
-      where: [
-        { name: ILike(`%${query}%`) },
-        { description: ILike(`%${query}%`) },
-      ],
-      take: 5,
-      relations: ['shop'],
-    });
+    try {
+      console.log('[KnowledgeBase] Searching products for:', query);
+      
+      const products = await this.productRepository.find({
+        where: [
+          { name: ILike(`%${query}%`) },
+          { description: ILike(`%${query}%`) },
+        ],
+        take: 5,
+        relations: ['shop'],
+      });
 
-    if (products.length === 0) return null;
+      console.log('[KnowledgeBase] Found products:', products.length);
 
-    let response = `Encontrei ${products.length} produto(s) relacionado(s):\n\n`;
-    
-    products.forEach((product, index) => {
-      response += `${index + 1}. **${product.name}**\n`;
-      response += `   💰 R$ ${product.price.toFixed(2)}\n`;
-      if (product.shop) {
-        response += `   🏪 ${product.shop.shopName}\n`;
-      }
-      response += `\n`;
-    });
+      if (products.length === 0) return null;
 
-    response += 'Quer saber mais sobre algum desses produtos?';
-    
-    return response;
+      let response = `Encontrei ${products.length} produto(s) relacionado(s):\n\n`;
+      
+      products.forEach((product, index) => {
+        response += `${index + 1}. **${product.name}**\n`;
+        response += `   💰 R$ ${product.price.toFixed(2)}\n`;
+        if (product.shop) {
+          response += `   🏪 ${product.shop.shopName}\n`;
+        }
+        response += `\n`;
+      });
+
+      response += 'Quer saber mais sobre algum desses produtos?';
+      
+      return response;
+    } catch (error) {
+      console.error('[KnowledgeBase] Error searching products:', error);
+      return null;
+    }
   }
 
   async searchShops(query: string): Promise<string | null> {
-    const shops = await this.shopRepository.find({
-      where: [
-        { shopName: ILike(`%${query}%`) },
-        { address: ILike(`%${query}%`) },
-      ],
-      take: 5,
-    });
+    try {
+      console.log('[KnowledgeBase] Searching shops for:', query);
+      
+      const shops = await this.shopRepository.find({
+        where: [
+          { shopName: ILike(`%${query}%`) },
+          { address: ILike(`%${query}%`) },
+        ],
+        take: 5,
+      });
 
-    if (shops.length === 0) return null;
+      console.log('[KnowledgeBase] Found shops:', shops.length);
 
-    let response = `Encontrei ${shops.length} loja(s):\n\n`;
-    
-    shops.forEach((shop, index) => {
-      response += `${index + 1}. **${shop.shopName}**\n`;
-      if (shop.address) {
-        response += `   📍 ${shop.address}\n`;
-      }
-      if (shop.contactPhone) {
-        response += `   📞 ${shop.contactPhone}\n`;
-      }
-      response += `\n`;
-    });
+      if (shops.length === 0) return null;
 
-    return response;
+      let response = `Encontrei ${shops.length} loja(s):\n\n`;
+      
+      shops.forEach((shop, index) => {
+        response += `${index + 1}. **${shop.shopName}**\n`;
+        if (shop.address) {
+          response += `   📍 ${shop.address}\n`;
+        }
+        if (shop.contactPhone) {
+          response += `   📞 ${shop.contactPhone}\n`;
+        }
+        response += `\n`;
+      });
+
+      return response;
+    } catch (error) {
+      console.error('[KnowledgeBase] Error searching shops:', error);
+      return null;
+    }
   }
 
   async search(query: string): Promise<string | null> {

@@ -88,7 +88,7 @@ export class QuickResponsesService {
     const productKeywords = ['tem', 'vende', 'vendem', 'procuro', 'quero', 'busco', 'preciso de', 'produto', 'comprar'];
     const isProductQuery = productKeywords.some((keyword) => normalized.includes(keyword));
     
-    if (isProductQuery && normalized.length > 15) {
+    if (isProductQuery) {
       // Let Knowledge Base handle product queries
       return null;
     }
