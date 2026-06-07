@@ -25,6 +25,7 @@ export class KnowledgeBaseService {
         .leftJoinAndSelect('product.photos', 'photos'); // Add photos relation
 
       // Add WHERE conditions with OR between them
+      // Priority: name matches are more relevant than description matches
       keywords.forEach((keyword, index) => {
         const paramName1 = `keyword_name_${index}`;
         const paramName2 = `keyword_desc_${index}`;
@@ -47,6 +48,14 @@ export class KnowledgeBaseService {
           );
         }
       });
+
+      // Order by: products with keyword in name come first, then by stock, then by ID
+      queryBuilder.orderBy(
+        `CASE WHEN LOWER(product.name) LIKE '%${keywords[0]}%' THEN 0 ELSE 1 END`,
+        'ASC',
+      );
+      queryBuilder.addOrderBy('product.stock', 'DESC');
+      queryBuilder.addOrderBy('product.id', 'DESC');
 
       // Log the SQL query for debugging
       const sqlQuery = queryBuilder.getSql();
@@ -167,16 +176,23 @@ export class KnowledgeBaseService {
       console.log('🔍 [KnowledgeBase] ========================================');
       console.log('🔍 [KnowledgeBase] Original query:', query);
 
-      // Extract keywords - MINIMAL filtering for better matching
-      // Only remove very common words that add no value
-      const stopWords = ['o', 'a', 'e', 'de', 'do', 'da', 'em', 'para', 'com', 'the', 'and', 'or', 'is', 'in', 'to'];
+      // Extract keywords - IMPROVED filtering
+      // Remove common Portuguese question words and very generic terms
+      const stopWords = [
+        'o', 'a', 'e', 'de', 'do', 'da', 'em', 'para', 'com', 'por', 'um', 'uma',
+        'tem', 'há', 'existe', 'quero', 'preciso', 'qual', 'onde', 'quando', 'como',
+        'the', 'and', 'or', 'is', 'in', 'to', 'have', 'has', 'want', 'need',
+      ];
       
       const keywords = query
         .toLowerCase()
+        // Remove emojis and special characters, keep only letters, numbers and spaces
+        .replace(/[^\p{L}\p{N}\s]/gu, '')
         .split(/[\s,]+/)
         .map(word => word.trim())
-        .filter(word => word.length >= 2 && !stopWords.includes(word)) // Changed from > 3 to >= 2
-        .filter((word, index, self) => self.indexOf(word) === index);
+        .filter(word => word.length >= 3) // Minimum 3 characters to avoid too generic searches
+        .filter(word => !stopWords.includes(word))
+        .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
 
       console.log('🔍 [KnowledgeBase] Keywords extracted:', keywords);
 
