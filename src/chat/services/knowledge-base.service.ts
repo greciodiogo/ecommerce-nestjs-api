@@ -38,21 +38,12 @@ export class KnowledgeBaseService {
         new Map(products.map(p => [p.id, p])).values()
       );
 
-      let response = `Encontrei ${uniqueProducts.length} produto(s):\n\n`;
+      // Simplified response - just the count, no list (cards will show the products)
+      let response = `Encontrei ${uniqueProducts.length} produto(s) 🛍️`;
       
-      uniqueProducts.slice(0, 5).forEach((product, index) => {
-        const price = product.price / 100;
-        const formattedPrice = price % 1 === 0 ? price.toFixed(0) : price.toFixed(2);
-        response += `${index + 1}. **${product.name}**\n`;
-        response += `   💰 ${formattedPrice} AOA\n`;
-        response += `\n`;
-      });
-
       if (uniqueProducts.length > 5) {
-        response += `... e mais ${uniqueProducts.length - 5} produto(s).\n\n`;
+        response += `\n\nMostrando os primeiros 5 resultados. Role para ver mais! ⬇️`;
       }
-
-      response += 'Quer saber mais sobre algum produto? 😊';
       
       // Return both text and structured product data
       return {
