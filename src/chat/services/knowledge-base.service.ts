@@ -26,7 +26,7 @@ export class KnowledgeBaseService {
       const products = await this.productRepository.find({
         where: whereConditions,
         take: 10, // Increased to show more results
-        relations: ['shop', 'primaryImage'],
+        relations: ['shop'],
       });
 
       console.log('[KnowledgeBase] Found products:', products.length);
@@ -57,16 +57,25 @@ export class KnowledgeBaseService {
       // Return both text and structured product data
       return {
         text: response,
-        products: uniqueProducts.map(p => ({
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          image: p.primaryImage?.fileUrl,
-          shopName: p.shop?.shopName,
-          shopId: p.shop?.id,
-          stock: p.stock,
-          description: p.description,
-        })),
+        products: uniqueProducts.map(p => {
+          // Build image URL from first photo
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+          };
+        }),
       };
     } catch (error) {
       console.error('[KnowledgeBase] Error searching products:', error);
