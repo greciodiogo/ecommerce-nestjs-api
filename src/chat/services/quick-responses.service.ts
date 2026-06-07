@@ -94,21 +94,18 @@ export class QuickResponsesService {
   findQuickResponse(message: string): string | null {
     const normalized = message.toLowerCase().trim();
     
-    // Extract words from message for exact matching
-    const messageWords = normalized.split(/[\s,;.!?]+/).filter(w => w.length > 0);
-    
-    // Find matching responses using word boundaries (exact word match)
+    // Find matching responses using flexible matching
     const matches = this.responses
       .filter((response) => {
-        // Check if any keyword matches any word in the message (exact match)
+        // Check if any keyword is contained in the message (partial match)
         return response.keywords.some((keyword) => {
-          const keywordWords = keyword.split(/\s+/);
-          // For multi-word keywords (e.g., "onde fica"), check if phrase exists
-          if (keywordWords.length > 1) {
-            return normalized.includes(keyword);
+          // For very short greetings, use exact word match
+          if (keyword.length <= 3) {
+            const messageWords = normalized.split(/[\s,;.!?]+/);
+            return messageWords.includes(keyword);
           }
-          // For single-word keywords, check exact word match
-          return messageWords.includes(keyword);
+          // For longer keywords, use contains (more flexible)
+          return normalized.includes(keyword);
         });
       })
       .sort((a, b) => a.priority - b.priority);

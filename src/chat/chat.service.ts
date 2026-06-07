@@ -19,6 +19,16 @@ export interface ChatResponse {
   source: ResponseSource;
   responseTimeMs: number;
   sessionId: string;
+  products?: Array<{
+    id: number;
+    name: string;
+    price: number;
+    image?: string;
+    shopName?: string;
+    shopId?: number;
+    stock?: number;
+    description?: string;
+  }>;
 }
 
 @Injectable()
@@ -82,23 +92,26 @@ export class ChatService {
         }
       }
 
-      // Try hybrid strategy
+      // Try hybrid strategy with better prioritization
       let response: string;
       let source: ResponseSource;
+      let products: any[] | undefined;
 
       try {
-        // Layer 1: Quick responses (70% of cases)
+        // Layer 1: Quick responses (ONLY for greetings and FAQs - 40% of cases)
         response = this.quickResponsesService.findQuickResponse(request.message);
         if (response) {
           source = ResponseSource.QUICK;
-          this.logger.log(`Quick response found for: "${request.message}"`);
+          this.logger.log(`✅ Quick response found for: "${request.message}"`);
         } else {
-          // Layer 2: Knowledge base search (20% of cases)
+          // Layer 2: Knowledge base search (for product/shop queries - 40% of cases)
           try {
-            response = await this.knowledgeBaseService.search(request.message);
-            if (response) {
+            const kbResult = await this.knowledgeBaseService.search(request.message);
+            if (kbResult) {
+              response = kbResult.text;
+              products = kbResult.products;
               source = ResponseSource.DATABASE;
-              this.logger.log(`Database response found for: "${request.message}"`);
+              this.logger.log(`✅ Knowledge base response found for: "${request.message}" with ${products?.length || 0} products`);
             }
           } catch (kbError) {
             this.logger.error('Knowledge base error:', kbError);
@@ -106,22 +119,31 @@ export class ChatService {
           }
           
           if (!response) {
-            // Layer 3: AI (10% of cases)
+            // Layer 3: AI for complex queries (20% of cases)
             if (this.geminiAIService.isConfigured()) {
-              const context = session ? await this.buildContext(session.id, request.userId) : 'Primeira interação';
-              response = await this.geminiAIService.chat(request.message, context);
-              source = ResponseSource.AI;
-              this.logger.log(`AI response generated for: "${request.message}"`);
-            } else {
-              // Fallback if AI not configured
-              response = `Hmm, não consegui entender "${request.message}". 
+              try {
+                const context = session ? await this.buildContext(session.id, request.userId) : 'Primeira interação';
+                response = await this.geminiAIService.chat(request.message, context);
+                source = ResponseSource.AI;
+                this.logger.log(`✅ AI response generated for: "${request.message}"`);
+              } catch (aiError) {
+                this.logger.error('AI error:', aiError);
+                response = null;
+              }
+            }
+            
+            if (!response) {
+              // Fallback if everything fails
+              response = `Hmm, não consegui encontrar uma resposta específica para "${request.message}". 
 
 Posso ajudar com:
-🔍 Buscar produtos (ex: "tem vinho")
+🔍 Buscar produtos (ex: "tem vinho", "quanto custa cerveja")
+🏆 Comparar preços (ex: "qual é o mais caro")
+🏪 Encontrar lojas
 ⏰ Horários do shopping
 📍 Localização
 
-O que você procura? 😊`;
+O que você gostaria de saber? 😊`;
               source = ResponseSource.QUICK;
             }
           }
@@ -156,6 +178,7 @@ O que você procura? 😊`;
         source,
         responseTimeMs,
         sessionId,
+        products,
       };
     } catch (error) {
       this.logger.error('Critical error in chat service:', error);

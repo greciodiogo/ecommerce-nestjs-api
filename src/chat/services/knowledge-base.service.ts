@@ -13,7 +13,7 @@ export class KnowledgeBaseService {
     private readonly shopRepository: Repository<Shop>,
   ) {}
 
-  async searchProducts(keywords: string[]): Promise<string | null> {
+  async searchProducts(keywords: string[]): Promise<{ text: string; products: any[] } | null> {
     try {
       console.log('[KnowledgeBase] Searching products for keywords:', keywords);
       
@@ -26,7 +26,7 @@ export class KnowledgeBaseService {
       const products = await this.productRepository.find({
         where: whereConditions,
         take: 10, // Increased to show more results
-        relations: ['shop'],
+        relations: ['shop', 'primaryImage'],
       });
 
       console.log('[KnowledgeBase] Found products:', products.length);
@@ -55,7 +55,20 @@ export class KnowledgeBaseService {
 
       response += 'Quer saber mais sobre algum produto? 😊';
       
-      return response;
+      // Return both text and structured product data
+      return {
+        text: response,
+        products: uniqueProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.primaryImage?.fileUrl,
+          shopName: p.shop?.shopName,
+          shopId: p.shop?.id,
+          stock: p.stock,
+          description: p.description,
+        })),
+      };
     } catch (error) {
       console.error('[KnowledgeBase] Error searching products:', error);
       return null;
@@ -110,20 +123,22 @@ export class KnowledgeBaseService {
     }
   }
 
-  async search(query: string): Promise<string | null> {
+  async search(query: string): Promise<{ text: string; products?: any[] } | null> {
     try {
       console.log('[KnowledgeBase] Searching for:', query);
 
-      // Extract keywords - be LESS restrictive
-      const stopWords = ['tem', 'qual', 'quais', 'the', 'and', 'or'];
+      // Extract keywords - MINIMAL filtering for better matching
+      // Only remove very common words that add no value
+      const stopWords = ['o', 'a', 'e', 'de', 'do', 'da', 'em', 'para', 'com', 'the', 'and', 'or', 'is', 'in', 'to'];
       
       const keywords = query
         .toLowerCase()
         .split(/[\s,]+/)
-        .filter(word => word.length > 3 && !stopWords.includes(word))
+        .map(word => word.trim())
+        .filter(word => word.length >= 2 && !stopWords.includes(word)) // Changed from > 3 to >= 2
         .filter((word, index, self) => self.indexOf(word) === index);
 
-      console.log('[KnowledgeBase] Keywords:', keywords);
+      console.log('[KnowledgeBase] Keywords extracted:', keywords);
 
       // If we have ANY keywords, search
       if (keywords.length > 0) {
@@ -138,11 +153,11 @@ export class KnowledgeBaseService {
         const shopResult = await this.searchShops(keywords);
         if (shopResult) {
           console.log('[KnowledgeBase] Found shops');
-          return shopResult;
+          return { text: shopResult };
         }
       }
 
-      console.log('[KnowledgeBase] No results found');
+      console.log('[KnowledgeBase] No results found for query:', query);
       return null;
     } catch (error) {
       console.error('[KnowledgeBase] Error:', error);
