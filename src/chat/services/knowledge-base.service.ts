@@ -21,7 +21,8 @@ export class KnowledgeBaseService {
       // Build proper OR query using QueryBuilder for better control
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
-        .leftJoinAndSelect('product.shop', 'shop');
+        .leftJoinAndSelect('product.shop', 'shop')
+        .leftJoinAndSelect('product.photos', 'photos'); // Add photos relation
 
       // Add WHERE conditions with OR between them
       keywords.forEach((keyword, index) => {
@@ -46,6 +47,10 @@ export class KnowledgeBaseService {
           );
         }
       });
+
+      // Log the SQL query for debugging
+      const sqlQuery = queryBuilder.getSql();
+      console.log('🔍 [KnowledgeBase] SQL Query:', sqlQuery);
 
       const products = await queryBuilder
         .take(10)
