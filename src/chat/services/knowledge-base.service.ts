@@ -18,6 +18,11 @@ export class KnowledgeBaseService {
       console.log('🔍 [KnowledgeBase] ========================================');
       console.log('🔍 [KnowledgeBase] Searching products for keywords:', keywords);
       
+      if (keywords.length === 0) {
+        console.log('🔍 [KnowledgeBase] ❌ No keywords provided');
+        return null;
+      }
+      
       // Build proper OR query using QueryBuilder for better control
       const queryBuilder = this.productRepository
         .createQueryBuilder('product')
@@ -25,44 +30,43 @@ export class KnowledgeBaseService {
         .leftJoinAndSelect('product.photos', 'photos'); // Add photos relation
 
       // Add WHERE conditions with OR between them
-      // Priority: name matches are more relevant than description matches
-      keywords.forEach((keyword, index) => {
-        const paramName1 = `keyword_name_${index}`;
-        const paramName2 = `keyword_desc_${index}`;
-        
-        if (index === 0) {
-          queryBuilder.where(
-            `(LOWER(product.name) LIKE :${paramName1} OR LOWER(product.description) LIKE :${paramName2})`,
-            {
-              [paramName1]: `%${keyword.toLowerCase()}%`,
-              [paramName2]: `%${keyword.toLowerCase()}%`,
-            },
-          );
-        } else {
-          queryBuilder.orWhere(
-            `(LOWER(product.name) LIKE :${paramName1} OR LOWER(product.description) LIKE :${paramName2})`,
-            {
-              [paramName1]: `%${keyword.toLowerCase()}%`,
-              [paramName2]: `%${keyword.toLowerCase()}%`,
-            },
-          );
-        }
+      // Build dynamic where clause for first keyword
+      const firstKeyword = keywords[0];
+      queryBuilder.where(
+        '(LOWER(product.name) LIKE :keyword0_name OR LOWER(product.description) LIKE :keyword0_desc)',
+        {
+          keyword0_name: `%${firstKeyword.toLowerCase()}%`,
+          keyword0_desc: `%${firstKeyword.toLowerCase()}%`,
+        },
+      );
+
+      // Add OR conditions for remaining keywords
+      keywords.slice(1).forEach((keyword, index) => {
+        const paramIndex = index + 1;
+        queryBuilder.orWhere(
+          `(LOWER(product.name) LIKE :keyword${paramIndex}_name OR LOWER(product.description) LIKE :keyword${paramIndex}_desc)`,
+          {
+            [`keyword${paramIndex}_name`]: `%${keyword.toLowerCase()}%`,
+            [`keyword${paramIndex}_desc`]: `%${keyword.toLowerCase()}%`,
+          },
+        );
       });
 
       // Order by: products with keyword in name come first, then by stock, then by ID
-      queryBuilder.orderBy(
-        `CASE WHEN LOWER(product.name) LIKE '%${keywords[0]}%' THEN 0 ELSE 1 END`,
+      queryBuilder.addOrderBy(
+        `CASE WHEN LOWER(product.name) LIKE :orderKeyword THEN 0 ELSE 1 END`,
         'ASC',
       );
+      queryBuilder.setParameter('orderKeyword', `%${firstKeyword.toLowerCase()}%`);
       queryBuilder.addOrderBy('product.stock', 'DESC');
       queryBuilder.addOrderBy('product.id', 'DESC');
 
-      // Log the SQL query for debugging
-      const sqlQuery = queryBuilder.getSql();
-      console.log('🔍 [KnowledgeBase] SQL Query:', sqlQuery);
+      // Log the SQL query for debugging with parameters
+      console.log('🔍 [KnowledgeBase] SQL Query:', queryBuilder.getSql());
+      console.log('🔍 [KnowledgeBase] Parameters:', queryBuilder.getParameters());
 
       const products = await queryBuilder
-        .take(10)
+        .limit(10)
         .getMany();
 
       console.log('🔍 [KnowledgeBase] SQL Query executed');
