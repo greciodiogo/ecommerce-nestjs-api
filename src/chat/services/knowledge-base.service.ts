@@ -41,11 +41,10 @@ export class KnowledgeBaseService {
       let response = `Encontrei ${uniqueProducts.length} produto(s):\n\n`;
       
       uniqueProducts.slice(0, 5).forEach((product, index) => {
+        const price = product.price / 100;
+        const formattedPrice = price % 1 === 0 ? price.toFixed(0) : price.toFixed(2);
         response += `${index + 1}. **${product.name}**\n`;
-        response += `   💰 ${(product.price / 100).toFixed(2)} AOA\n`;
-        if (product.shop) {
-          response += `   🏪 ${product.shop.shopName}\n`;
-        }
+        response += `   💰 ${formattedPrice} AOA\n`;
         response += `\n`;
       });
 
