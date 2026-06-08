@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Product } from '../../catalog/products/models/product.entity';
 import { Shop } from '../../catalog/shops/models/shop.entity';
+import { Promotion } from '../../catalog/promotions/models/promotion.entity';
 
 @Injectable()
 export class KnowledgeBaseService {
@@ -11,7 +12,116 @@ export class KnowledgeBaseService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Shop)
     private readonly shopRepository: Repository<Shop>,
+    @InjectRepository(Promotion)
+    private readonly promotionRepository: Repository<Promotion>,
   ) {}
+
+  async searchPromotions(): Promise<{ text: string; products: any[] } | null> {
+    try {
+      console.log('🎉 [KnowledgeBase] ========================================');
+      console.log('🎉 [KnowledgeBase] Searching for active promotions');
+      
+      const now = new Date();
+      
+      // Find all active promotions
+      const activePromotions = await this.promotionRepository.find({
+        where: {
+          isActive: true,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
+        relations: ['products', 'products.shop', 'products.photos'],
+      });
+
+      console.log('🎉 [KnowledgeBase] Found active promotions:', activePromotions.length);
+
+      if (activePromotions.length === 0) {
+        console.log('🎉 [KnowledgeBase] ❌ No active promotions found');
+        console.log('🎉 [KnowledgeBase] ========================================');
+        return {
+          text: 'Não temos produtos em promoção no momento. 😔\n\nMas fique atento! Em breve teremos novas ofertas! 🎁',
+          products: [],
+        };
+      }
+
+      // Collect all products from active promotions
+      const allProducts: Product[] = [];
+      const productPromotionMap = new Map<number, { promotion: Promotion; discount: number }>();
+
+      activePromotions.forEach(promotion => {
+        if (promotion.products && promotion.products.length > 0) {
+          promotion.products.forEach(product => {
+            // Only include visible products with stock
+            if (product.visible && product.stock > 0) {
+              allProducts.push(product);
+              productPromotionMap.set(product.id, {
+                promotion,
+                discount: Number(promotion.discount),
+              });
+            }
+          });
+        }
+      });
+
+      console.log('🎉 [KnowledgeBase] Total products in promotions:', allProducts.length);
+
+      if (allProducts.length === 0) {
+        console.log('🎉 [KnowledgeBase] ❌ No visible products in promotions');
+        console.log('🎉 [KnowledgeBase] ========================================');
+        return {
+          text: 'Não temos produtos em promoção disponíveis no momento. 😔',
+          products: [],
+        };
+      }
+
+      // Remove duplicates by id
+      const uniqueProducts = Array.from(
+        new Map(allProducts.map(p => [p.id, p])).values()
+      );
+
+      console.log('🎉 [KnowledgeBase] Unique products after dedup:', uniqueProducts.length);
+
+      const response = `Encontrei ${uniqueProducts.length} produto(s) em promoção! 🎉🔥\n\nAproveite os descontos! 💰`;
+      
+      console.log('🎉 [KnowledgeBase] ✅ Returning', uniqueProducts.length, 'promotional products');
+      console.log('🎉 [KnowledgeBase] ========================================');
+      
+      // Return both text and structured product data with promotional prices
+      return {
+        text: response,
+        products: uniqueProducts.map(p => {
+          const promotionData = productPromotionMap.get(p.id);
+          const discount = promotionData?.discount || 0;
+          const originalPrice = p.price;
+          const promotionalPrice = originalPrice * (1 - discount / 100);
+
+          // Build image URL from first photo
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: promotionalPrice, // Use promotional price
+            originalPrice: originalPrice, // Keep original for display
+            discountPercentage: discount,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+            hasActivePromotion: true,
+          };
+        }),
+      };
+    } catch (error) {
+      console.error('❌ [KnowledgeBase] Error searching promotions:', error);
+      return null;
+    }
+  }
 
   async searchProducts(keywords: string[]): Promise<{ text: string; products: any[] } | null> {
     try {
@@ -179,6 +289,20 @@ export class KnowledgeBaseService {
     try {
       console.log('🔍 [KnowledgeBase] ========================================');
       console.log('🔍 [KnowledgeBase] Original query:', query);
+
+      const queryLower = query.toLowerCase();
+
+      // Check if user is asking about promotions
+      const promotionKeywords = ['promoção', 'promoções', 'promocao', 'promocoes', 'desconto', 'descontos', 'oferta', 'ofertas'];
+      const isPromotionQuery = promotionKeywords.some(keyword => queryLower.includes(keyword));
+
+      if (isPromotionQuery) {
+        console.log('🎉 [KnowledgeBase] Detected promotion query');
+        const promotionResult = await this.searchPromotions();
+        if (promotionResult) {
+          return promotionResult;
+        }
+      }
 
       // Extract keywords - IMPROVED filtering
       // Remove common Portuguese question words and very generic terms
