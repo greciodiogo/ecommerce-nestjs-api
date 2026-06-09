@@ -304,6 +304,24 @@ export class KnowledgeBaseService {
         }
       }
 
+      // Check if user is asking for most expensive products
+      const expensiveKeywords = ['mais caro', 'mais caros', 'caro', 'caros', 'preço alto', 'mais expensive'];
+      const isExpensiveQuery = expensiveKeywords.some(keyword => queryLower.includes(keyword));
+
+      if (isExpensiveQuery) {
+        console.log('💎 [KnowledgeBase] Detected expensive query - searching by highest price');
+        return await this.searchMostExpensive();
+      }
+
+      // Check if user is asking for cheapest products
+      const cheapKeywords = ['mais barato', 'mais baratos', 'barato', 'baratos', 'preço baixo', 'em conta'];
+      const isCheapQuery = cheapKeywords.some(keyword => queryLower.includes(keyword));
+
+      if (isCheapQuery) {
+        console.log('💰 [KnowledgeBase] Detected cheap query - searching by lowest price');
+        return await this.searchCheapest();
+      }
+
       // Extract keywords - IMPROVED filtering
       // Remove common Portuguese question words and very generic terms
       const stopWords = [
@@ -348,6 +366,122 @@ export class KnowledgeBaseService {
       return null;
     } catch (error) {
       console.error('❌ [KnowledgeBase] Error:', error);
+      return null;
+    }
+  }
+
+  async searchMostExpensive(): Promise<{ text: string; products: any[] } | null> {
+    try {
+      console.log('💎 [KnowledgeBase] ========================================');
+      console.log('💎 [KnowledgeBase] Searching for most expensive products');
+      
+      const products = await this.productRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.shop', 'shop')
+        .leftJoinAndSelect('product.photos', 'photos')
+        .where('product.visible = :visible', { visible: true })
+        .andWhere('product.price > :minPrice', { minPrice: 0 })
+        .orderBy('product.price', 'DESC') // Order by price DESCENDING
+        .limit(10)
+        .getMany();
+
+      console.log('💎 [KnowledgeBase] Found products:', products.length);
+      if (products.length > 0) {
+        console.log('💎 [KnowledgeBase] Top 3 prices:', products.slice(0, 3).map(p => ({ name: p.name, price: p.price })));
+      }
+
+      if (products.length === 0) {
+        console.log('💎 [KnowledgeBase] ❌ No products found');
+        console.log('💎 [KnowledgeBase] ========================================');
+        return null;
+      }
+
+      const response = `Encontrei ${products.length} produto(s) 💎\n\nOrdenados do mais caro para o mais barato! 📊`;
+      
+      console.log('💎 [KnowledgeBase] ✅ Returning', products.length, 'products');
+      console.log('💎 [KnowledgeBase] ========================================');
+      
+      return {
+        text: response,
+        products: products.map(p => {
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+          };
+        }),
+      };
+    } catch (error) {
+      console.error('❌ [KnowledgeBase] Error searching most expensive:', error);
+      return null;
+    }
+  }
+
+  async searchCheapest(): Promise<{ text: string; products: any[] } | null> {
+    try {
+      console.log('💰 [KnowledgeBase] ========================================');
+      console.log('💰 [KnowledgeBase] Searching for cheapest products');
+      
+      const products = await this.productRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.shop', 'shop')
+        .leftJoinAndSelect('product.photos', 'photos')
+        .where('product.visible = :visible', { visible: true })
+        .andWhere('product.price > :minPrice', { minPrice: 0 })
+        .orderBy('product.price', 'ASC') // Order by price ASCENDING
+        .limit(10)
+        .getMany();
+
+      console.log('💰 [KnowledgeBase] Found products:', products.length);
+      if (products.length > 0) {
+        console.log('💰 [KnowledgeBase] Top 3 prices:', products.slice(0, 3).map(p => ({ name: p.name, price: p.price })));
+      }
+
+      if (products.length === 0) {
+        console.log('💰 [KnowledgeBase] ❌ No products found');
+        console.log('💰 [KnowledgeBase] ========================================');
+        return null;
+      }
+
+      const response = `Encontrei ${products.length} produto(s) 💰\n\nOrdenados do mais barato para o mais caro! 📊`;
+      
+      console.log('💰 [KnowledgeBase] ✅ Returning', products.length, 'products');
+      console.log('💰 [KnowledgeBase] ========================================');
+      
+      return {
+        text: response,
+        products: products.map(p => {
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+          };
+        }),
+      };
+    } catch (error) {
+      console.error('❌ [KnowledgeBase] Error searching cheapest:', error);
       return null;
     }
   }
