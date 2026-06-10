@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { ChatSession } from './entities/chat-session.entity';
 import { ChatMessage, MessageRole, ResponseSource } from './entities/chat-message.entity';
+import { ChatConfig } from './entities/chat-config.entity';
 import { QuickResponsesService } from './services/quick-responses.service';
 import { KnowledgeBaseService } from './services/knowledge-base.service';
 import { GeminiAIService } from './services/gemini-ai.service';
@@ -40,6 +41,8 @@ export class ChatService {
     private readonly sessionRepository: Repository<ChatSession>,
     @InjectRepository(ChatMessage)
     private readonly messageRepository: Repository<ChatMessage>,
+    @InjectRepository(ChatConfig)
+    private readonly configRepository: Repository<ChatConfig>,
     private readonly quickResponsesService: QuickResponsesService,
     private readonly knowledgeBaseService: KnowledgeBaseService,
     private readonly geminiAIService: GeminiAIService,
@@ -222,5 +225,114 @@ O que você gostaria de saber? 😊`;
       .join('\n');
 
     return `Histórico recente:\n${context}`;
+  }
+
+  async getConfig(): Promise<ChatConfig> {
+    try {
+      // Get the active config (should only have one)
+      const config = await this.configRepository.findOne({
+        where: { isActive: true },
+      });
+
+      if (config) {
+        return config;
+      }
+
+      // If no config exists, create default with all fields
+      const defaultConfig = this.configRepository.create({
+        assistantName: 'Sino',
+        welcomeMessage: 'Como posso ajudar você hoje?',
+        avatarUrl: null,
+        greetingMessage: 'Olá, amigo! 👋🏾',
+        greetingMessageWithName: 'Olá, {name}! 👋🏾',
+        quickReplies: [
+          { icon: 'attach_money', label: 'Qual é o mais caro?', message: 'Qual é o mais caro? 💎' },
+          { icon: 'wine_bar', label: 'Tem vinho?', message: 'Tem vinho? 🍷' },
+          { icon: 'sports_bar', label: 'Mostrar cervejas', message: 'Mostrar cervejas 🍺' },
+          { icon: 'local_offer', label: 'Promoções', message: 'Quais são as promoções? 🏷️' },
+          { icon: 'access_time', label: 'Horários', message: 'Horários do shopping ⏰' },
+          { icon: 'location_on', label: 'Localização', message: 'Onde fica? 📍' },
+        ],
+        isActive: true,
+      });
+
+      return await this.configRepository.save(defaultConfig);
+    } catch (error) {
+      this.logger.error('Error getting chat config:', error);
+      // Return default config if database fails
+      return {
+        id: 0,
+        assistantName: 'Sino',
+        welcomeMessage: 'Como posso ajudar você hoje?',
+        avatarUrl: null,
+        greetingMessage: 'Olá, amigo! 👋🏾',
+        greetingMessageWithName: 'Olá, {name}! 👋🏾',
+        quickReplies: [
+          { icon: 'attach_money', label: 'Qual é o mais caro?', message: 'Qual é o mais caro? 💎' },
+          { icon: 'wine_bar', label: 'Tem vinho?', message: 'Tem vinho? 🍷' },
+          { icon: 'sports_bar', label: 'Mostrar cervejas', message: 'Mostrar cervejas 🍺' },
+          { icon: 'local_offer', label: 'Promoções', message: 'Quais são as promoções? 🏷️' },
+          { icon: 'access_time', label: 'Horários', message: 'Horários do shopping ⏰' },
+          { icon: 'location_on', label: 'Localização', message: 'Onde fica? 📍' },
+        ],
+        isActive: true,
+        created: new Date(),
+        updated: new Date(),
+      };
+    }
+  }
+
+  async updateConfig(updateData: Partial<ChatConfig>): Promise<ChatConfig> {
+    try {
+      // Get current active config
+      let config = await this.configRepository.findOne({
+        where: { isActive: true },
+      });
+
+      if (!config) {
+        // Create new config if none exists
+        config = this.configRepository.create({
+          assistantName: 'Sino',
+          welcomeMessage: 'Como posso ajudar você hoje?',
+          avatarUrl: null,
+          greetingMessage: 'Olá, amigo! 👋🏾',
+          greetingMessageWithName: 'Olá, {name}! 👋🏾',
+          quickReplies: [
+            { icon: 'attach_money', label: 'Qual é o mais caro?', message: 'Qual é o mais caro? 💎' },
+            { icon: 'wine_bar', label: 'Tem vinho?', message: 'Tem vinho? 🍷' },
+            { icon: 'sports_bar', label: 'Mostrar cervejas', message: 'Mostrar cervejas 🍺' },
+            { icon: 'local_offer', label: 'Promoções', message: 'Quais são as promoções? 🏷️' },
+            { icon: 'access_time', label: 'Horários', message: 'Horários do shopping ⏰' },
+            { icon: 'location_on', label: 'Localização', message: 'Onde fica? 📍' },
+          ],
+          isActive: true,
+        });
+      }
+
+      // Update all configurable fields
+      if (updateData.assistantName !== undefined) {
+        config.assistantName = updateData.assistantName;
+      }
+      if (updateData.welcomeMessage !== undefined) {
+        config.welcomeMessage = updateData.welcomeMessage;
+      }
+      if (updateData.avatarUrl !== undefined) {
+        config.avatarUrl = updateData.avatarUrl;
+      }
+      if (updateData.greetingMessage !== undefined) {
+        config.greetingMessage = updateData.greetingMessage;
+      }
+      if (updateData.greetingMessageWithName !== undefined) {
+        config.greetingMessageWithName = updateData.greetingMessageWithName;
+      }
+      if (updateData.quickReplies !== undefined) {
+        config.quickReplies = updateData.quickReplies;
+      }
+
+      return await this.configRepository.save(config);
+    } catch (error) {
+      this.logger.error('Error updating chat config:', error);
+      throw error;
+    }
   }
 }

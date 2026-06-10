@@ -4,6 +4,7 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { ChatSession } from './entities/chat-session.entity';
 import { ChatMessage } from './entities/chat-message.entity';
+import { ChatConfig } from './entities/chat-config.entity';
 import { QuickResponsesService } from './services/quick-responses.service';
 import { KnowledgeBaseService } from './services/knowledge-base.service';
 import { GeminiAIService } from './services/gemini-ai.service';
@@ -16,6 +17,7 @@ import { Promotion } from '../catalog/promotions/models/promotion.entity';
     TypeOrmModule.forFeature([
       ChatSession,
       ChatMessage,
+      ChatConfig,
       Product,
       Shop,
       Promotion,

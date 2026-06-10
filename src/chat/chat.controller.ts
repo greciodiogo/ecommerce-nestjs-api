@@ -1,10 +1,20 @@
-import { Controller, Post, Get, Body, Param, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Req, Put } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
+
+  @Get('config')
+  async getConfig() {
+    return this.chatService.getConfig();
+  }
+
+  @Put('config')
+  async updateConfig(@Body() config: any) {
+    return this.chatService.updateConfig(config);
+  }
 
   @Post()
   async chat(
