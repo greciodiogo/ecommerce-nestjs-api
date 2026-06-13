@@ -32,9 +32,19 @@ export interface ChatResponse {
   }>;
 }
 
+// Context memory for conversation
+interface ConversationContext {
+  lastSearchKeywords?: string[];
+  lastProductIds?: number[];
+  lastSearchType?: 'products' | 'shops' | 'promotions' | 'expensive' | 'cheap';
+}
+
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
+  
+  // In-memory context storage (pode migrar para Redis depois)
+  private conversationContexts: Map<string, ConversationContext> = new Map();
 
   constructor(
     @InjectRepository(ChatSession)
@@ -109,11 +119,29 @@ export class ChatService {
         } else {
           // Layer 2: Knowledge base search (for product/shop queries - 40% of cases)
           try {
-            const kbResult = await this.knowledgeBaseService.search(request.message);
+            // Get conversation context
+            const context = this.conversationContexts.get(sessionId) || {};
+            
+            const kbResult = await this.knowledgeBaseService.search(
+              request.message,
+              context.lastSearchKeywords,
+              context.lastProductIds,
+            );
+            
             if (kbResult) {
               response = kbResult.text;
               products = kbResult.products;
               source = ResponseSource.DATABASE;
+              
+              // Update context with this search
+              if (kbResult.keywords && kbResult.keywords.length > 0) {
+                this.conversationContexts.set(sessionId, {
+                  lastSearchKeywords: kbResult.keywords,
+                  lastProductIds: products?.map(p => p.id) || [],
+                  lastSearchType: kbResult.searchType || 'products',
+                });
+              }
+              
               this.logger.log(`✅ Knowledge base response found for: "${request.message}" with ${products?.length || 0} products`);
             }
           } catch (kbError) {

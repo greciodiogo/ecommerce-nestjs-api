@@ -123,7 +123,7 @@ export class KnowledgeBaseService {
     }
   }
 
-  async searchProducts(keywords: string[]): Promise<{ text: string; products: any[] } | null> {
+  async searchProducts(keywords: string[]): Promise<{ text: string; products: any[]; keywords?: string[]; searchType?: 'products' } | null> {
     try {
       console.log('🔍 [KnowledgeBase] ========================================');
       console.log('🔍 [KnowledgeBase] Searching products for keywords:', keywords);
@@ -139,11 +139,15 @@ export class KnowledgeBaseService {
         .leftJoinAndSelect('product.shop', 'shop')
         .leftJoinAndSelect('product.photos', 'photos'); // Add photos relation
 
+      // Only show visible products with stock > 0
+      queryBuilder.andWhere('product.visible = :visible', { visible: true });
+      queryBuilder.andWhere('product.stock > :minStock', { minStock: 0 });
+
       // Add WHERE conditions with OR between them
       // Build dynamic where clause for first keyword
       const firstKeyword = keywords[0];
-      queryBuilder.where(
-        '(LOWER(product.name) LIKE :keyword0_name OR LOWER(product.description) LIKE :keyword0_desc)',
+      queryBuilder.andWhere(
+        '(LOWER(product.name) LIKE :keyword0_name OR LOWER(COALESCE(product.description, \'\')) LIKE :keyword0_desc)',
         {
           keyword0_name: `%${firstKeyword.toLowerCase()}%`,
           keyword0_desc: `%${firstKeyword.toLowerCase()}%`,
@@ -154,7 +158,7 @@ export class KnowledgeBaseService {
       keywords.slice(1).forEach((keyword, index) => {
         const paramIndex = index + 1;
         queryBuilder.orWhere(
-          `(LOWER(product.name) LIKE :keyword${paramIndex}_name OR LOWER(product.description) LIKE :keyword${paramIndex}_desc)`,
+          `(LOWER(product.name) LIKE :keyword${paramIndex}_name OR LOWER(COALESCE(product.description, '')) LIKE :keyword${paramIndex}_desc)`,
           {
             [`keyword${paramIndex}_name`]: `%${keyword.toLowerCase()}%`,
             [`keyword${paramIndex}_desc`]: `%${keyword.toLowerCase()}%`,
@@ -211,6 +215,8 @@ export class KnowledgeBaseService {
       // Return both text and structured product data
       return {
         text: response,
+        keywords, // Return keywords for context
+        searchType: 'products' as const,
         products: uniqueProducts.map(p => {
           // Build image URL from first photo
           let imageUrl: string | undefined;
@@ -285,10 +291,21 @@ export class KnowledgeBaseService {
     }
   }
 
-  async search(query: string): Promise<{ text: string; products?: any[] } | null> {
+  async search(
+    query: string,
+    contextKeywords?: string[],
+    contextProductIds?: number[],
+  ): Promise<{ 
+    text: string; 
+    products?: any[];
+    keywords?: string[];
+    searchType?: 'products' | 'shops' | 'promotions' | 'expensive' | 'cheap';
+  } | null> {
     try {
       console.log('🔍 [KnowledgeBase] ========================================');
       console.log('🔍 [KnowledgeBase] Original query:', query);
+      console.log('🔍 [KnowledgeBase] Context keywords:', contextKeywords);
+      console.log('🔍 [KnowledgeBase] Context product IDs:', contextProductIds);
 
       const queryLower = query.toLowerCase();
 
@@ -300,7 +317,10 @@ export class KnowledgeBaseService {
         console.log('🎉 [KnowledgeBase] Detected promotion query');
         const promotionResult = await this.searchPromotions();
         if (promotionResult) {
-          return promotionResult;
+          return {
+            ...promotionResult,
+            searchType: 'promotions',
+          };
         }
       }
 
@@ -310,7 +330,17 @@ export class KnowledgeBaseService {
 
       if (isExpensiveQuery) {
         console.log('💎 [KnowledgeBase] Detected expensive query - searching by highest price');
-        return await this.searchMostExpensive();
+        
+        // USE CONTEXT: if we have context keywords/products, search within them
+        if (contextKeywords && contextKeywords.length > 0) {
+          console.log('💎 [KnowledgeBase] Using context keywords:', contextKeywords);
+          return await this.searchMostExpensive(contextKeywords);
+        } else if (contextProductIds && contextProductIds.length > 0) {
+          console.log('💎 [KnowledgeBase] Using context product IDs:', contextProductIds);
+          return await this.searchMostExpensiveFromIds(contextProductIds);
+        } else {
+          return await this.searchMostExpensive();
+        }
       }
 
       // Check if user is asking for cheapest products
@@ -319,7 +349,17 @@ export class KnowledgeBaseService {
 
       if (isCheapQuery) {
         console.log('💰 [KnowledgeBase] Detected cheap query - searching by lowest price');
-        return await this.searchCheapest();
+        
+        // USE CONTEXT: if we have context keywords/products, search within them
+        if (contextKeywords && contextKeywords.length > 0) {
+          console.log('💰 [KnowledgeBase] Using context keywords:', contextKeywords);
+          return await this.searchCheapest(contextKeywords);
+        } else if (contextProductIds && contextProductIds.length > 0) {
+          console.log('💰 [KnowledgeBase] Using context product IDs:', contextProductIds);
+          return await this.searchCheapestFromIds(contextProductIds);
+        } else {
+          return await this.searchCheapest();
+        }
       }
 
       // Extract keywords - IMPROVED filtering
@@ -328,6 +368,7 @@ export class KnowledgeBaseService {
         'o', 'a', 'e', 'de', 'do', 'da', 'em', 'para', 'com', 'por', 'um', 'uma',
         'tem', 'há', 'existe', 'quero', 'preciso', 'qual', 'onde', 'quando', 'como',
         'the', 'and', 'or', 'is', 'in', 'to', 'have', 'has', 'want', 'need',
+        'me', 'mostrar', 'mostre', 'ver', 'buscar', 'procurar', 'encontrar', 'achar',
       ];
       
       const keywords = query
@@ -336,11 +377,12 @@ export class KnowledgeBaseService {
         .replace(/[^\p{L}\p{N}\s]/gu, '')
         .split(/[\s,]+/)
         .map(word => word.trim())
-        .filter(word => word.length >= 3) // Minimum 3 characters to avoid too generic searches
+        .filter(word => word.length >= 2) // CHANGED: Minimum 2 characters (was 3) - allows "tv", "pc", etc
         .filter(word => !stopWords.includes(word))
         .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
 
       console.log('🔍 [KnowledgeBase] Keywords extracted:', keywords);
+      console.log('🔍 [KnowledgeBase] Keywords count:', keywords.length);
 
       // If we have ANY keywords, search
       if (keywords.length > 0) {
@@ -359,6 +401,26 @@ export class KnowledgeBaseService {
           console.log('🔍 [KnowledgeBase] ========================================');
           return { text: shopResult };
         }
+      } else {
+        // No keywords extracted - try searching with original query as single keyword
+        console.log('🔍 [KnowledgeBase] No keywords extracted, using original query');
+        const singleKeyword = query.toLowerCase().trim();
+        
+        if (singleKeyword.length >= 2) {
+          const productResult = await this.searchProducts([singleKeyword]);
+          if (productResult) {
+            console.log('🔍 [KnowledgeBase] ✅ Found products with original query');
+            console.log('🔍 [KnowledgeBase] ========================================');
+            return productResult;
+          }
+
+          const shopResult = await this.searchShops([singleKeyword]);
+          if (shopResult) {
+            console.log('🔍 [KnowledgeBase] ✅ Found shops with original query');
+            console.log('🔍 [KnowledgeBase] ========================================');
+            return { text: shopResult };
+          }
+        }
       }
 
       console.log('🔍 [KnowledgeBase] ❌ No results found for query:', query);
@@ -370,17 +432,33 @@ export class KnowledgeBaseService {
     }
   }
 
-  async searchMostExpensive(): Promise<{ text: string; products: any[] } | null> {
+  async searchMostExpensive(keywords?: string[]): Promise<{ text: string; products: any[]; searchType: 'expensive' } | null> {
     try {
       console.log('💎 [KnowledgeBase] ========================================');
       console.log('💎 [KnowledgeBase] Searching for most expensive products');
+      if (keywords) {
+        console.log('💎 [KnowledgeBase] Filtering by keywords:', keywords);
+      }
       
-      const products = await this.productRepository
+      const queryBuilder = this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.shop', 'shop')
         .leftJoinAndSelect('product.photos', 'photos')
         .where('product.visible = :visible', { visible: true })
-        .andWhere('product.price > :minPrice', { minPrice: 0 })
+        .andWhere('product.price > :minPrice', { minPrice: 0 });
+
+      // If keywords provided, filter by them
+      if (keywords && keywords.length > 0) {
+        const keywordConditions = keywords.map((keyword, index) => {
+          const paramName = `keyword${index}`;
+          queryBuilder.setParameter(`${paramName}_name`, `%${keyword.toLowerCase()}%`);
+          queryBuilder.setParameter(`${paramName}_desc`, `%${keyword.toLowerCase()}%`);
+          return `(LOWER(product.name) LIKE :${paramName}_name OR LOWER(COALESCE(product.description, '')) LIKE :${paramName}_desc)`;
+        });
+        queryBuilder.andWhere(`(${keywordConditions.join(' OR ')})`);
+      }
+
+      const products = await queryBuilder
         .orderBy('product.price', 'DESC') // Order by price DESCENDING
         .limit(10)
         .getMany();
@@ -403,6 +481,7 @@ export class KnowledgeBaseService {
       
       return {
         text: response,
+        searchType: 'expensive' as const,
         products: products.map(p => {
           let imageUrl: string | undefined;
           if (p.photos && p.photos.length > 0) {
@@ -428,17 +507,90 @@ export class KnowledgeBaseService {
     }
   }
 
-  async searchCheapest(): Promise<{ text: string; products: any[] } | null> {
+  async searchMostExpensiveFromIds(productIds: number[]): Promise<{ text: string; products: any[]; searchType: 'expensive' } | null> {
     try {
-      console.log('💰 [KnowledgeBase] ========================================');
-      console.log('💰 [KnowledgeBase] Searching for cheapest products');
+      console.log('💎 [KnowledgeBase] ========================================');
+      console.log('💎 [KnowledgeBase] Searching for most expensive from specific IDs:', productIds);
       
       const products = await this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.shop', 'shop')
         .leftJoinAndSelect('product.photos', 'photos')
+        .where('product.id IN (:...ids)', { ids: productIds })
+        .orderBy('product.price', 'DESC')
+        .getMany();
+
+      console.log('💎 [KnowledgeBase] Found products:', products.length);
+      if (products.length > 0) {
+        console.log('💎 [KnowledgeBase] Top 3 prices:', products.slice(0, 3).map(p => ({ name: p.name, price: p.price })));
+      }
+
+      if (products.length === 0) {
+        console.log('💎 [KnowledgeBase] ❌ No products found');
+        console.log('💎 [KnowledgeBase] ========================================');
+        return null;
+      }
+
+      const response = `Encontrei ${products.length} produto(s) 💎\n\nOrdenados do mais caro para o mais barato! 📊`;
+      
+      console.log('💎 [KnowledgeBase] ✅ Returning', products.length, 'products');
+      console.log('💎 [KnowledgeBase] ========================================');
+      
+      return {
+        text: response,
+        searchType: 'expensive' as const,
+        products: products.map(p => {
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+          };
+        }),
+      };
+    } catch (error) {
+      console.error('❌ [KnowledgeBase] Error searching most expensive from IDs:', error);
+      return null;
+    }
+  }
+
+  async searchCheapest(keywords?: string[]): Promise<{ text: string; products: any[]; searchType: 'cheap' } | null> {
+    try {
+      console.log('💰 [KnowledgeBase] ========================================');
+      console.log('💰 [KnowledgeBase] Searching for cheapest products');
+      if (keywords) {
+        console.log('💰 [KnowledgeBase] Filtering by keywords:', keywords);
+      }
+      
+      const queryBuilder = this.productRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.shop', 'shop')
+        .leftJoinAndSelect('product.photos', 'photos')
         .where('product.visible = :visible', { visible: true })
-        .andWhere('product.price > :minPrice', { minPrice: 0 })
+        .andWhere('product.price > :minPrice', { minPrice: 0 });
+
+      // If keywords provided, filter by them
+      if (keywords && keywords.length > 0) {
+        const keywordConditions = keywords.map((keyword, index) => {
+          const paramName = `keyword${index}`;
+          queryBuilder.setParameter(`${paramName}_name`, `%${keyword.toLowerCase()}%`);
+          queryBuilder.setParameter(`${paramName}_desc`, `%${keyword.toLowerCase()}%`);
+          return `(LOWER(product.name) LIKE :${paramName}_name OR LOWER(COALESCE(product.description, '')) LIKE :${paramName}_desc)`;
+        });
+        queryBuilder.andWhere(`(${keywordConditions.join(' OR ')})`);
+      }
+
+      const products = await queryBuilder
         .orderBy('product.price', 'ASC') // Order by price ASCENDING
         .limit(10)
         .getMany();
@@ -461,6 +613,7 @@ export class KnowledgeBaseService {
       
       return {
         text: response,
+        searchType: 'cheap' as const,
         products: products.map(p => {
           let imageUrl: string | undefined;
           if (p.photos && p.photos.length > 0) {
@@ -482,6 +635,63 @@ export class KnowledgeBaseService {
       };
     } catch (error) {
       console.error('❌ [KnowledgeBase] Error searching cheapest:', error);
+      return null;
+    }
+  }
+
+  async searchCheapestFromIds(productIds: number[]): Promise<{ text: string; products: any[]; searchType: 'cheap' } | null> {
+    try {
+      console.log('💰 [KnowledgeBase] ========================================');
+      console.log('💰 [KnowledgeBase] Searching for cheapest from specific IDs:', productIds);
+      
+      const products = await this.productRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.shop', 'shop')
+        .leftJoinAndSelect('product.photos', 'photos')
+        .where('product.id IN (:...ids)', { ids: productIds })
+        .orderBy('product.price', 'ASC')
+        .getMany();
+
+      console.log('💰 [KnowledgeBase] Found products:', products.length);
+      if (products.length > 0) {
+        console.log('💰 [KnowledgeBase] Top 3 prices:', products.slice(0, 3).map(p => ({ name: p.name, price: p.price })));
+      }
+
+      if (products.length === 0) {
+        console.log('💰 [KnowledgeBase] ❌ No products found');
+        console.log('💰 [KnowledgeBase] ========================================');
+        return null;
+      }
+
+      const response = `Encontrei ${products.length} produto(s) 💰\n\nOrdenados do mais barato para o mais caro! 📊`;
+      
+      console.log('💰 [KnowledgeBase] ✅ Returning', products.length, 'products');
+      console.log('💰 [KnowledgeBase] ========================================');
+      
+      return {
+        text: response,
+        searchType: 'cheap' as const,
+        products: products.map(p => {
+          let imageUrl: string | undefined;
+          if (p.photos && p.photos.length > 0) {
+            const firstPhoto = p.photos[0];
+            imageUrl = `/products/${p.id}/photos/${firstPhoto.id}`;
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: imageUrl,
+            shopName: p.shop?.shopName,
+            shopId: p.shop?.id,
+            stock: p.stock,
+            description: p.description,
+          };
+        }),
+      };
+    } catch (error) {
+      console.error('❌ [KnowledgeBase] Error searching cheapest from IDs:', error);
       return null;
     }
   }
