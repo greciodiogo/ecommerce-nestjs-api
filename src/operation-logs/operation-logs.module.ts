@@ -10,9 +10,11 @@ import { UsersModule } from '../users/users.module';
 import { MailModule } from '../mail/mail.module';
 import { OperationLogsReportController } from './operation-logs-report.controller';
 import { OperationLogController } from './operation-log.controller';
+import { RedisModule } from '../redis';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OperationLog]), ScheduleModule, UsersModule, MailModule],
+  imports: [TypeOrmModule.forFeature([OperationLog]), ScheduleModule, UsersModule, MailModule, RedisModule],
+
   providers: [
     OperationLogsService,
     OperationLogsReportService,
