@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OperationLogsService } from './operation-logs.service';
 import { UsersService } from '../users/users.service';
@@ -8,52 +8,90 @@ import { Role } from '../users/models/role.enum';
 import * as fs from 'fs';
 import * as path from 'path';
 import autoTable from 'jspdf-autotable';
+import { RedisClient } from 'redis';
+import { REDIS_CLIENT } from '../redis/redis.constants';
+import { promisify } from 'util';
+
+const LOCK_KEY = 'operation-logs-report-lock';
+const LOCK_TTL_SECONDS = 120;
 
 @Injectable()
 export class OperationLogsReportService {
   private readonly logger = new Logger(OperationLogsReportService.name);
+  private readonly redisSet: (key: string, value: string, mode: string, duration: number, flag: string) => Promise<string | null>;
+  private readonly redisDel: (key: string) => Promise<number>;
 
   constructor(
     private readonly operationLogsService: OperationLogsService,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
-  ) {}
+    @Inject(REDIS_CLIENT) private readonly redisClient: RedisClient,
+  ) {
+    this.redisSet = promisify(this.redisClient.set).bind(this.redisClient) as any;
+    this.redisDel = promisify(this.redisClient.del).bind(this.redisClient) as any;
+  }
 
   @Cron('0 21 * * *') // Every day at 9 p.m.
   async sendWeeklyReport() {
-    this.logger.log('Generating weekly operation logs report...');
-    // 1. Fetch admin users
-    const admins = await this.usersService.findUsersByRole(Role.Admin);
-    if (!admins || admins.length === 0) {
-    this.logger.warn('No admin users found. Skipping report.');
-    return;
+    // Attempt to acquire a distributed lock so only one replica runs this job
+    let lockAcquired = false;
+    try {
+      const result = await this.redisSet(LOCK_KEY, '1', 'EX', LOCK_TTL_SECONDS, 'NX');
+      lockAcquired = result === 'OK';
+    } catch (err) {
+      this.logger.error(`Failed to acquire Redis lock: ${err.message}`, err.stack);
+      // Proceed without lock to avoid silently skipping the report on Redis failure
+      lockAcquired = true;
     }
-    // 2. Fetch today's logs
-    const logs = await this.operationLogsService.getLogsFromToday();
-    // 3. Generate PDF
-    const pdfBuffer = await this.generatePdf(logs);
-    // 4. Send email to each admin
-    for (const admin of admins) {
-      await this.mailService.sendMailWithAttachment({
-        to: admin.email,
-        subject: 'Weekly Operation Logs Report',
-        text: 'Attached is the operation logs report for last week.',
-        attachments: [
-          {
-            filename: 'operation-logs-report.pdf',
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ],
-      });
+
+    if (!lockAcquired) {
+      this.logger.log('Skipping weekly operation logs report — lock already held by another replica.');
+      return;
     }
-    this.logger.log('Weekly operation logs report sent to all admins.');
+
+    this.logger.log('Lock acquired. Generating weekly operation logs report...');
+    try {
+      // 1. Fetch admin users
+      const admins = await this.usersService.findUsersByRole(Role.Admin);
+      if (!admins || admins.length === 0) {
+        this.logger.warn('No admin users found. Skipping report.');
+        return;
+      }
+      // 2. Fetch today's logs
+      const logs = await this.operationLogsService.getLogsFromToday();
+      // 3. Generate PDF
+      const pdfBuffer = await this.generatePdf(logs);
+      // 4. Send email to each admin
+      for (const admin of admins) {
+        await this.mailService.sendMailWithAttachment({
+          to: admin.email,
+          subject: 'Weekly Operation Logs Report',
+          text: 'Attached is the operation logs report for last week.',
+          attachments: [
+            {
+              filename: 'operation-logs-report.pdf',
+              content: pdfBuffer,
+              contentType: 'application/pdf',
+            },
+          ],
+        });
+      }
+      this.logger.log('Weekly operation logs report sent to all admins.');
+    } finally {
+      try {
+        await this.redisDel(LOCK_KEY);
+        this.logger.log('Released operation logs report lock.');
+      } catch (err) {
+        this.logger.error(`Failed to release Redis lock: ${err.message}`, err.stack);
+      }
+    }
   }
 
   async generatePdf(logs: any[]): Promise<Buffer> {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 10;
+
     // Add logo
     try {
       const logoPath = path.join(process.cwd(), 'public', 'logo.png');
